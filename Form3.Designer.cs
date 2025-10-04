@@ -28,13 +28,25 @@
         /// </summary>
         private void InitializeComponent()
         {
+            AdminPanelButton = new Button();
             SuspendLayout();
+            // 
+            // AdminPanelButton
+            // 
+            AdminPanelButton.Location = new Point(86, 304);
+            AdminPanelButton.Name = "AdminPanelButton";
+            AdminPanelButton.Size = new Size(136, 54);
+            AdminPanelButton.TabIndex = 0;
+            AdminPanelButton.Text = "Open AdminPanelButton";
+            AdminPanelButton.UseVisualStyleBackColor = true;
+            AdminPanelButton.Click += AdminPanelButton_Click;
             // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(AdminPanelButton);
             Name = "LibraryForm";
             Text = "LibraryForm";
             Load += Form3_Load;
@@ -42,5 +54,7 @@
         }
 
         #endregion
+
+        private Button AdminPanelButton;
     }
 }

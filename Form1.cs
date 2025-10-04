@@ -5,8 +5,8 @@ namespace LibraryTeamWinFormApp
     public partial class StartForm : Form
     {
         string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=1234;Database=LibraryDataBase";
-        RegisterForm registrationForm = null;
-        LibraryForm libraryForm = null;
+        RegisterForm? registrationForm = null;
+        LibraryForm? libraryForm = null;
         NpgsqlConnection? DBConnection = null;
         
 
@@ -47,6 +47,8 @@ namespace LibraryTeamWinFormApp
 
                 using (var cmd = new NpgsqlCommand(sql, DBConnection))
                 {
+                    int id = -1;
+                    cmd.Parameters.AddWithValue("id", id);
                     cmd.Parameters.AddWithValue("name", login);
                     cmd.Parameters.AddWithValue("password", password);
 
@@ -62,6 +64,7 @@ namespace LibraryTeamWinFormApp
                             reader.Close();
                             UserInfo userInfo = new UserInfo
                             {
+                                Id = id,
                                 Name = login,
                                 Password = password,
                                 Rights = rights
@@ -87,27 +90,12 @@ namespace LibraryTeamWinFormApp
             }
         }
 
-
         private bool ValidateInputs()
         {
             bool isValid = true;
-            if (!ValidateTextBox(LoginTextBox)) isValid = false;
-            if (!ValidateTextBox(PasswordTextBox)) isValid = false;
+            if (!LoginTextBox.ValidateTextBox()) isValid = false;
+            if (!PasswordTextBox.ValidateTextBox()) isValid = false;
             return isValid;
-        }
-
-        private bool ValidateTextBox(TextBox textBox)
-        {
-            if (string.IsNullOrWhiteSpace(textBox.Text))
-            {
-                textBox.BackColor = Color.Red;
-                return false;
-            }
-            else
-            {
-                textBox.BackColor = SystemColors.Window;
-                return true;
-            }
         }
 
         private void ConnectToDB()
@@ -155,7 +143,8 @@ namespace LibraryTeamWinFormApp
 }
 public class UserInfo
 {
-    public string Name { get; set; }
-    public string Password { get; set; }
-    public string Rights { get; set; }
+    public int Id = -1;
+    public string Name = String.Empty;
+    public string Password = String.Empty;
+    public string Rights = String.Empty;
 }

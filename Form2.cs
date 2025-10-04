@@ -23,8 +23,9 @@ namespace LibraryTeamWinFormApp
         private bool ValidateInputs()
         {
             bool isValid = true;
-            if (!ValidateTextBox(LoginTextBox)) isValid = false;
-            if (!ValidateTextBox(PasswordTextBox)) isValid = false;
+            LoginTextBox.ValidateTextBox();
+            if (!LoginTextBox.ValidateTextBox()) isValid = false;
+            if (!PasswordTextBox.ValidateTextBox()) isValid = false;
             if (comboBoxRights.SelectedItem == null)
             {
                 comboBoxRights.BackColor = Color.Red;
@@ -37,20 +38,6 @@ namespace LibraryTeamWinFormApp
             return isValid;
         }
 
-        private bool ValidateTextBox(TextBox textBox)
-        {
-            if (string.IsNullOrWhiteSpace(textBox.Text))
-            {
-                textBox.BackColor = Color.Red;
-                return false;
-            }
-            else
-            {
-                textBox.BackColor = SystemColors.Window;
-                return true;
-            }
-        }
-
         private void RegisterNewUser()
         {
             try
@@ -61,12 +48,11 @@ namespace LibraryTeamWinFormApp
                 {
                     cmd.Parameters.AddWithValue("name", LoginTextBox.Text);
                     cmd.Parameters.AddWithValue("password", PasswordTextBox.Text);
-                    cmd.Parameters.AddWithValue("rights", GetRightsStringFromComboBox());
+                    cmd.Parameters.AddWithValue("rights", comboBoxRights.GetRightsStringFromComboBox());
 
                     int rows = cmd.ExecuteNonQuery();
                 }
 
-                // Implement user registration logic here
                 MessageBox.Show("User registered successfully!");
                 OnNewUserRegistered?.Invoke(LoginTextBox.Text, PasswordTextBox.Text);
                 this.Close();
@@ -74,21 +60,6 @@ namespace LibraryTeamWinFormApp
             catch (Exception ex)
             {
                 MessageBox.Show($"Error registering user: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private string GetRightsStringFromComboBox()
-        {
-            switch (comboBoxRights.SelectedIndex)
-            {
-                case 0:
-                    return "admin";
-                case 1:
-                    return "librarian";
-                case 2:
-                    return "reader";
-                default:
-                    return string.Empty;
             }
         }
     }
