@@ -105,6 +105,7 @@
             PasswordTextBox.Size = new Size(158, 23);
             PasswordTextBox.TabIndex = 17;
             PasswordTextBox.TextAlign = HorizontalAlignment.Center;
+            PasswordTextBox.TextChanged += PasswordTextBox_TextChanged;
             // 
             // LoginTextBox
             // 

@@ -30,5 +30,15 @@
                     return string.Empty;
             }
         }
+
+        public static bool IsHaveLiters(this TextBox textBox)
+        {
+            string text = textBox.Text;
+            foreach (char c in text)
+            {
+                if (char.IsLetter(c)) return true;
+            }
+            return false;
+        }
     }
 }

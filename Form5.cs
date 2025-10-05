@@ -41,35 +41,39 @@ namespace LibraryTeamWinFormApp
             }
 
             // Validation
-            if (!LoginTextBox.ValidateTextBox() || !PasswordTextBox.ValidateTextBox() || comboBoxRights.SelectedIndex == -1)
+            if (!LoginTextBox.ValidateTextBox() || comboBoxRights.SelectedIndex == -1)
             {
                 MessageBox.Show("Пожалуйста, заполните все поля.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
+            bool isPasswordNeedToBeChanged = String.IsNullOrEmpty(PasswordTextBox.Text);
             try
             {
-                string sql = "UPDATE users SET name = @name, password = @password, rights = @rights WHERE id = @id";
+                string sql = string.Empty;
+                if (isPasswordNeedToBeChanged) 
+                    sql = "UPDATE users SET name = @name, password = @password, rights = @rights WHERE id = @id";
+                else
+                    sql = "UPDATE users SET name = @name, rights = @rights WHERE id = @id";
 
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
-                {
-                    cmd.Parameters.AddWithValue("name", LoginTextBox.Text);
-                    cmd.Parameters.AddWithValue("password", PasswordTextBox.Text);
-                    cmd.Parameters.AddWithValue("rights", comboBoxRights.SelectedItem.ToString().ToLower());
-                    cmd.Parameters.AddWithValue("id", userInfo.Id);
-
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    if (rowsAffected > 0)
                     {
-                        MessageBox.Show("Изменения успешно сохранены!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        this.Close();
+                        cmd.Parameters.AddWithValue("name", LoginTextBox.Text);
+                        if (isPasswordNeedToBeChanged) cmd.Parameters.AddWithValue("password", PasswordTextBox.Text);
+                        cmd.Parameters.AddWithValue("rights", comboBoxRights.SelectedItem.ToString().ToLower());
+                        cmd.Parameters.AddWithValue("id", userInfo.Id);
+
+                        int rowsAffected = cmd.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            MessageBox.Show("Изменения успешно сохранены!", "Успех", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            this.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Не удалось обновить данные. Проверьте ID пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
                     }
-                    else
-                    {
-                        MessageBox.Show("Не удалось обновить данные. Проверьте ID пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
             }
             catch (Exception ex)
             {
@@ -78,6 +82,11 @@ namespace LibraryTeamWinFormApp
         }
 
         private void comboBoxRights_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void PasswordTextBox_TextChanged(object sender, EventArgs e)
         {
 
         }
