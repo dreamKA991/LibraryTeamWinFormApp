@@ -31,7 +31,6 @@
             usersGridView = new DataGridView();
             btnDeleteUser = new Button();
             btnEditUser = new Button();
-            btnRefresh = new Button();
             ((System.ComponentModel.ISupportInitialize)usersGridView).BeginInit();
             SuspendLayout();
             // 
@@ -42,11 +41,10 @@
             usersGridView.Name = "usersGridView";
             usersGridView.Size = new Size(542, 323);
             usersGridView.TabIndex = 0;
-            usersGridView.CellContentClick += usersGridView_CellContentClick;
             // 
             // btnDeleteUser
             // 
-            btnDeleteUser.Location = new Point(455, 357);
+            btnDeleteUser.Location = new Point(378, 370);
             btnDeleteUser.Name = "btnDeleteUser";
             btnDeleteUser.Size = new Size(148, 36);
             btnDeleteUser.TabIndex = 1;
@@ -56,7 +54,7 @@
             // 
             // btnEditUser
             // 
-            btnEditUser.Location = new Point(257, 357);
+            btnEditUser.Location = new Point(146, 370);
             btnEditUser.Name = "btnEditUser";
             btnEditUser.Size = new Size(148, 36);
             btnEditUser.TabIndex = 2;
@@ -64,21 +62,11 @@
             btnEditUser.UseVisualStyleBackColor = true;
             btnEditUser.Click += btnEditUser_Click;
             // 
-            // btnRefresh
-            // 
-            btnRefresh.Location = new Point(61, 357);
-            btnRefresh.Name = "btnRefresh";
-            btnRefresh.Size = new Size(148, 36);
-            btnRefresh.TabIndex = 3;
-            btnRefresh.Text = "btnRefresh";
-            btnRefresh.UseVisualStyleBackColor = true;
-            // 
             // AdminPanel
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
-            Controls.Add(btnRefresh);
+            ClientSize = new Size(638, 438);
             Controls.Add(btnEditUser);
             Controls.Add(btnDeleteUser);
             Controls.Add(usersGridView);
@@ -94,6 +82,5 @@
         private DataGridView usersGridView;
         private Button btnDeleteUser;
         private Button btnEditUser;
-        private Button btnRefresh;
     }
 }

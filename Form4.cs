@@ -81,7 +81,7 @@ namespace LibraryTeamWinFormApp
             string oldLogin = usersGridView.SelectedRows[0].Cells["login"].Value.ToString();
             string oldRights = usersGridView.SelectedRows[0].Cells["rights"].Value.ToString();
 
-            if(userSettingsForm is not null)
+            if (userSettingsForm is not null)
             {
                 userSettingsForm.Close();
             }
@@ -93,11 +93,6 @@ namespace LibraryTeamWinFormApp
         private void RefreshButton_Click(object sender, EventArgs e)
         {
             LoadUsers();
-        }
-
-        private void usersGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-
         }
     }
 }

@@ -35,6 +35,8 @@ namespace LibraryTeamWinFormApp
             {
                 comboBoxRights.BackColor = SystemColors.Window;
             }
+            if (IsLoginExists(LoginTextBox.Text)) isValid = false;
+
             return isValid;
         }
 
@@ -62,5 +64,31 @@ namespace LibraryTeamWinFormApp
                 MessageBox.Show($"Error registering user: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private bool IsLoginExists(string login)
+        {
+            try
+            {
+                string sql = "SELECT COUNT(*) FROM users WHERE name = @name";
+                using (var cmd = new NpgsqlCommand(sql, DBConnection))
+                {
+                    cmd.Parameters.AddWithValue("name", login);
+
+                    long count = (long)cmd.ExecuteScalar();
+                    if (count > 0)
+                    {
+                        MessageBox.Show($"That login already exists", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return true;
+                    }
+                    else return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error checking login: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return true; 
+            }
+        }
+
     }
 }
