@@ -1,4 +1,7 @@
-﻿namespace LibraryTeamWinFormApp
+﻿using Npgsql;
+using System.Data.Common;
+
+namespace LibraryTeamWinFormApp
 {
     public static class AdditionalFormsFunctionalityExtension
     {
@@ -39,6 +42,30 @@
                 if (char.IsLetter(c)) return true;
             }
             return false;
+        }
+        public static bool IsLoginExistsInDataBase(this NpgsqlConnection dbConnection,string login)
+        {
+            try
+            {
+                string sql = "SELECT COUNT(*) FROM users WHERE name = @name";
+                using (var cmd = new NpgsqlCommand(sql, dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("name", login);
+
+                    long count = (long)cmd.ExecuteScalar();
+                    if (count > 0)
+                    {
+                        MessageBox.Show($"That login already exists", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return true;
+                    }
+                    else return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error checking login: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return true;
+            }
         }
     }
 }

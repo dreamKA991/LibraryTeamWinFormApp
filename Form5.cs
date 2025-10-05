@@ -5,20 +5,21 @@ namespace LibraryTeamWinFormApp
     public partial class UserSettings : Form
     {
         NpgsqlConnection? dbConnection;
-        UserInfo userInfo;
-        public UserSettings(NpgsqlConnection? dbConnection, UserInfo userInfo)
+        UserInfo selectedUserInfo, signedUserInfo;
+        public UserSettings(NpgsqlConnection? dbConnection, UserInfo selectedUserInfo, UserInfo signedUserInfo)
         {
             InitializeComponent();
             this.dbConnection = dbConnection;
-            this.userInfo = userInfo;
+            this.selectedUserInfo = selectedUserInfo;
+            this.signedUserInfo = signedUserInfo;
         }
 
         private void Form5_Load(object sender, EventArgs e)
         {
-            LoginTextBox.Text = userInfo.Name;
-            PasswordTextBox.Text = userInfo.Password;
+            LoginTextBox.Text = selectedUserInfo.Name;
+            PasswordTextBox.Text = selectedUserInfo.Password;
 
-            switch (userInfo.Rights)
+            switch (selectedUserInfo.Rights)
             {
                 case "reader":
                     comboBoxRights.SelectedIndex = 0;
@@ -41,12 +42,34 @@ namespace LibraryTeamWinFormApp
             }
 
             // Validation
+            bool isValid = true;
+            
+            if (selectedUserInfo.Name != LoginTextBox.Text)
+            {
+                if(dbConnection.IsLoginExistsInDataBase(LoginTextBox.Text))
+                {
+                    isValid = false;
+                    return;
+                }
+            }
             if (!LoginTextBox.ValidateTextBox() || comboBoxRights.SelectedIndex == -1)
             {
                 MessageBox.Show("Пожалуйста, заполните все поля.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                isValid = false;
                 return;
             }
-            bool isPasswordNeedToBeChanged = String.IsNullOrEmpty(PasswordTextBox.Text);
+            if(signedUserInfo.Id == selectedUserInfo.Id)
+            {
+                if (signedUserInfo.Rights != comboBoxRights.SelectedItem.ToString().ToLower())
+                {
+                    MessageBox.Show("Нельзя изменять себе права.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    isValid = false;
+                    return;
+                }
+            }
+            
+            if (!isValid) return;
+            bool isPasswordNeedToBeChanged = !String.IsNullOrEmpty(PasswordTextBox.Text);
             try
             {
                 string sql = string.Empty;
@@ -60,7 +83,7 @@ namespace LibraryTeamWinFormApp
                         cmd.Parameters.AddWithValue("name", LoginTextBox.Text);
                         if (isPasswordNeedToBeChanged) cmd.Parameters.AddWithValue("password", PasswordTextBox.Text);
                         cmd.Parameters.AddWithValue("rights", comboBoxRights.SelectedItem.ToString().ToLower());
-                        cmd.Parameters.AddWithValue("id", userInfo.Id);
+                        cmd.Parameters.AddWithValue("id", selectedUserInfo.Id);
 
                         int rowsAffected = cmd.ExecuteNonQuery();
 

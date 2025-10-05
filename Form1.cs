@@ -23,7 +23,7 @@ namespace LibraryTeamWinFormApp
         private void onRegisterButton_Click(object sender, EventArgs e)
         {
             if (!ValidateInputs()) return;
-            if (!TryLogin()) return;
+            TryLogin();
         }
 
         private bool TryLogin()
@@ -43,7 +43,7 @@ namespace LibraryTeamWinFormApp
 
             try
             {
-                string sql = "SELECT rights FROM users WHERE name = @name AND password = @password";
+                string sql = "SELECT rights, id FROM users WHERE name = @name AND password = @password";
 
                 using (var cmd = new NpgsqlCommand(sql, DBConnection))
                 {
@@ -57,7 +57,7 @@ namespace LibraryTeamWinFormApp
                         if (reader.Read())
                         {
                             string rights = reader["rights"].ToString();
-
+                            id = (int)reader["id"];
                             MessageBox.Show($"Добро пожаловать, {login}! Ваша роль: {rights}",
                                 "Успешный вход", MessageBoxButtons.OK, MessageBoxIcon.Information);
 

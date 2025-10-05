@@ -55,6 +55,12 @@ namespace LibraryTeamWinFormApp
             int userId = Convert.ToInt32(usersGridView.SelectedRows[0].Cells["id"].Value);
             string login = usersGridView.SelectedRows[0].Cells["login"].Value.ToString();
 
+            if(login == userInfo.Name)
+            {
+                MessageBox.Show("You cannot delete your own account.");
+                return;
+            }
+
             var confirm = MessageBox.Show($"Delete user '{login}'?", "Confirm", MessageBoxButtons.YesNo);
             if (confirm == DialogResult.Yes)
             {
@@ -85,7 +91,7 @@ namespace LibraryTeamWinFormApp
             {
                 userSettingsForm.Close();
             }
-            userSettingsForm = new UserSettings(dbConnection, new UserInfo { Id = userId, Name = oldLogin, Rights = oldRights });
+            userSettingsForm = new UserSettings(dbConnection, new UserInfo { Id = userId, Name = oldLogin, Rights = oldRights }, userInfo);
             userSettingsForm.FormClosed += (s, args) => { LoadUsers(); };
             userSettingsForm.Show();
         }
