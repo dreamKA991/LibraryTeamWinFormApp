@@ -23,7 +23,7 @@ namespace LibraryTeamWinFormApp
             bool isValid = true;
             if (!TitleBookTextBox.ValidateTextBox()) isValid = false;
             if (!ISBNBookTextBox.ValidateTextBox()) isValid = false;
-            if (ISBNBookTextBox.IsHaveLiters())
+            if (ISBNBookTextBox.IsHaveLiters() || ISBNBookTextBox.Text.Length > 32)
             {
                 isValid = false;
                 ISBNBookTextBox.BackColor = Color.Red;
