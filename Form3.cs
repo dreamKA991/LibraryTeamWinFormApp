@@ -11,6 +11,7 @@ namespace LibraryTeamWinFormApp
         AddNewBookInLibrary AddNewBookInLibrary = null;
         TakeBookForm? takeBookForm = null;
         DataTable cachedDataTable;
+        EditBookForm? editBookForm = null;
 
         public LibraryForm(NpgsqlConnection? dbConnection, UserInfo userInfo)
         {
@@ -292,7 +293,7 @@ namespace LibraryTeamWinFormApp
             }
 
             bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
-                            $"Is data correct?\n Login: {login}\n Returning book: \n ID {bookId} : {bookTitle}",
+                            $"Is data correct?\n User login: {login} with ID: {fk_usertakedbook_id}\n Returning book: \n ID {bookId} : {bookTitle}",
                             Microsoft.VisualBasic.MsgBoxStyle.YesNo,
                             "Librarian Approval"
                         ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
@@ -343,6 +344,23 @@ namespace LibraryTeamWinFormApp
 
             AddNewBookInLibrary = new AddNewBookInLibrary(dbConnection, this);
             AddNewBookInLibrary.Show();
+        }
+
+        private void EditSelectedBookButton_Click(object sender, EventArgs e)
+        {
+            if (booksGridView.SelectedRows.Count == 0)
+            {
+                MessageBox.Show("Select a book to check availability.");
+                return;
+            }
+            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
+
+            if(editBookForm is not null)
+            {
+                editBookForm.Close();
+            }
+            editBookForm = new EditBookForm(dbConnection, bookId, this);
+            editBookForm.Show();
         }
     }
 }

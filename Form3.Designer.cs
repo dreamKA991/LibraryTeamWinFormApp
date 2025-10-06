@@ -40,6 +40,7 @@
             label1 = new Label();
             label2 = new Label();
             label3 = new Label();
+            EditSelectedBookButton = new Button();
             ((System.ComponentModel.ISupportInitialize)booksGridView).BeginInit();
             SuspendLayout();
             // 
@@ -109,7 +110,7 @@
             // 
             // AddNewBookButton
             // 
-            AddNewBookButton.Location = new Point(636, 199);
+            AddNewBookButton.Location = new Point(636, 181);
             AddNewBookButton.Name = "AddNewBookButton";
             AddNewBookButton.Size = new Size(136, 47);
             AddNewBookButton.TabIndex = 8;
@@ -119,7 +120,7 @@
             // 
             // DeleteSelectedBook
             // 
-            DeleteSelectedBook.Location = new Point(636, 252);
+            DeleteSelectedBook.Location = new Point(636, 287);
             DeleteSelectedBook.Name = "DeleteSelectedBook";
             DeleteSelectedBook.Size = new Size(136, 47);
             DeleteSelectedBook.TabIndex = 9;
@@ -139,7 +140,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(641, 171);
+            label2.Location = new Point(641, 163);
             label2.Name = "label2";
             label2.Size = new Size(119, 15);
             label2.TabIndex = 11;
@@ -154,11 +155,22 @@
             label3.TabIndex = 12;
             label3.Text = "User's admin controls";
             // 
+            // EditSelectedBookButton
+            // 
+            EditSelectedBookButton.Location = new Point(636, 234);
+            EditSelectedBookButton.Name = "EditSelectedBookButton";
+            EditSelectedBookButton.Size = new Size(136, 47);
+            EditSelectedBookButton.TabIndex = 13;
+            EditSelectedBookButton.Text = "EditSelectedBookButton";
+            EditSelectedBookButton.UseVisualStyleBackColor = true;
+            EditSelectedBookButton.Click += EditSelectedBookButton_Click;
+            // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(784, 441);
+            Controls.Add(EditSelectedBookButton);
             Controls.Add(label3);
             Controls.Add(label2);
             Controls.Add(label1);
@@ -194,5 +206,6 @@
         private Label label1;
         private Label label2;
         private Label label3;
+        private Button EditSelectedBookButton;
     }
 }
