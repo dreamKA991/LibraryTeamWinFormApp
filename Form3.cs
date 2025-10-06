@@ -1,5 +1,6 @@
 ﻿using Npgsql;
 using System.Data;
+using System.Net;
 
 namespace LibraryTeamWinFormApp
 {
@@ -33,7 +34,7 @@ namespace LibraryTeamWinFormApp
         {
             switch (rights)
             {
-                case "reader":
+                case "читач":
                     try
                     {
                         string query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability FROM books ORDER BY id";
@@ -58,8 +59,8 @@ namespace LibraryTeamWinFormApp
                         MessageBox.Show("Error loading books: " + ex.Message);
                     }
                     break;
-                case "librarian":
-                case "admin":
+                case "бібліотекар":
+                case "адміністратор":
                     try
                     {
                         string query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability, takeddate, puttodate FROM books ORDER BY id";
@@ -97,9 +98,9 @@ namespace LibraryTeamWinFormApp
             {
                 adminPanelForm.Close();
             }
-            if (userInfo.Rights != "admin")
+            if (userInfo.Rights != "адміністратор")
             {
-                MessageBox.Show("Access denied. Admins only.");
+                MessageBox.Show("Доступ заборонено. Тільки для адміністраторів.");
                 return;
             }
             adminPanelForm = new AdminPanel(dbConnection, userInfo);
@@ -111,18 +112,6 @@ namespace LibraryTeamWinFormApp
             dbConnection?.Close();
             dbConnection?.Dispose();
             Application.Exit();
-        }
-
-        private void CheckAvailabilityButton_Click(object sender, EventArgs e)
-        {
-            if (booksGridView.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Select a book to check availability.");
-                return;
-            }
-
-            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
-
         }
 
         private void FindBookByNameButton_Click(object sender, EventArgs e)
@@ -140,7 +129,7 @@ namespace LibraryTeamWinFormApp
 
                 DataTable filteredTable = filteredRows.Any()
                     ? filteredRows.CopyToDataTable()
-                    : cachedDataTable.Clone(); // пустая структура
+                    : cachedDataTable.Clone();
 
                 booksGridView.DataSource = filteredTable;
             }
@@ -148,9 +137,9 @@ namespace LibraryTeamWinFormApp
 
         private void TakeBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights != "admin" && userInfo.Rights != "librarian")
+            if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
             {
-                MessageBox.Show("Only librarians and admins can take books. You " + userInfo.Rights);
+                MessageBox.Show("Тiльки бібліотекарi та адміністратори можуть брати книги. Ви: " + userInfo.Rights);
                 return;
             }
             if (booksGridView.SelectedRows.Count == 0)
@@ -243,14 +232,14 @@ namespace LibraryTeamWinFormApp
             string bookTitle = booksGridView.SelectedRows[0].Cells["Title"].Value.ToString();
             string login = String.Empty;
             int fk_usertakedbook_id = -1;
+            DateTime dateToPut = new DateTime();
 
             try
             {
-                string query = "SELECT fk_usertakedbook_id FROM books WHERE id = @bookId";
+                string query = "SELECT puttodate,fk_usertakedbook_id FROM books WHERE id = @bookId";
                 using (var cmd = new NpgsqlCommand(query, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("bookId", bookId);
-
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (!reader.Read())
@@ -260,6 +249,7 @@ namespace LibraryTeamWinFormApp
                         }
 
                         fk_usertakedbook_id = Convert.ToInt32(reader["fk_usertakedbook_id"]);
+                        dateToPut = Convert.ToDateTime(reader["puttodate"]);
                     }
                 }
             }
@@ -292,8 +282,12 @@ namespace LibraryTeamWinFormApp
                 MessageBox.Show("Error returning book: " + ex.Message);
             }
 
+            string bookOverdue = String.Empty;
+            bool isBookOverdue = DateTime.Now.Date > dateToPut.Date;
+            bookOverdue = isBookOverdue ? "Iз запiзненням." : "Без запiзнення.";
+
             bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
-                            $"Is data correct?\n User login: {login} with ID: {fk_usertakedbook_id}\n Returning book: \n ID {bookId} : {bookTitle}",
+                            $"Is data correct?\n User login: {login} with ID: {fk_usertakedbook_id}\n Returning book: \n ID {bookId} : {bookTitle} \n {bookOverdue}",
                             Microsoft.VisualBasic.MsgBoxStyle.YesNo,
                             "Librarian Approval"
                         ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
@@ -331,9 +325,9 @@ namespace LibraryTeamWinFormApp
 
         private void AddNewBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights != "admin" && userInfo.Rights != "librarian")
+            if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
             {
-                MessageBox.Show("Only librarians and admins can add books. You " + userInfo.Rights);
+                MessageBox.Show("Тiльки бібліотекарi та адміністратори можуть додати книги. Ви " + userInfo.Rights);
                 return;
             }
 
@@ -355,12 +349,55 @@ namespace LibraryTeamWinFormApp
             }
             int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
 
-            if(editBookForm is not null)
+            if (editBookForm is not null)
             {
                 editBookForm.Close();
             }
             editBookForm = new EditBookForm(dbConnection, bookId, this);
             editBookForm.Show();
+        }
+
+        private void ShowOverdueBooksButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string query = @"
+            SELECT 
+                b.id, 
+                b.title, 
+                u.name AS borrower,
+                b.takeddate AS ""Taken Date"",
+                b.puttodate AS ""Return Date""
+            FROM books b
+            JOIN users u ON b.fk_usertakedbook_id = u.id
+            WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL
+            ORDER BY b.puttodate ASC;";
+
+                using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
+                {
+                    DataTable overdueDataTable = new DataTable();
+                    adapter.Fill(overdueDataTable);
+                    booksGridView.DataSource = overdueDataTable;
+                }
+
+                booksGridView.Columns["id"].HeaderText = "ID";
+                booksGridView.Columns["title"].HeaderText = "Book Title";
+                booksGridView.Columns["borrower"].HeaderText = "Borrower";
+                booksGridView.Columns["Taken Date"].HeaderText = "Taken";
+                booksGridView.Columns["Return Date"].HeaderText = "Return Until";
+
+                booksGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                booksGridView.ReadOnly = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error loading overdue books: " + ex.Message);
+            }
+        }
+
+        private void ShowAllLibraryButton_Click(object sender, EventArgs e)
+        {
+            UpdateBooksData();
         }
     }
 }

@@ -107,12 +107,13 @@
             // 
             comboBoxRights.ForeColor = SystemColors.WindowText;
             comboBoxRights.FormattingEnabled = true;
-            comboBoxRights.Items.AddRange(new object[] { "Reader", "Libriarian", "Admin", "" });
+            comboBoxRights.Items.AddRange(new object[] { "Читач", "Бібліотекар", "Адміністратор" });
             comboBoxRights.Location = new Point(107, 179);
             comboBoxRights.Name = "comboBoxRights";
             comboBoxRights.Size = new Size(101, 23);
             comboBoxRights.TabIndex = 15;
             comboBoxRights.Text = "Select role";
+            comboBoxRights.SelectedIndexChanged += comboBoxRights_SelectedIndexChanged;
             // 
             // RegisterForm
             // 

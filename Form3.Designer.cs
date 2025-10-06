@@ -41,12 +41,14 @@
             label2 = new Label();
             label3 = new Label();
             EditSelectedBookButton = new Button();
+            ShowOverdueBooksButton = new Button();
+            ShowAllLibraryButton = new Button();
             ((System.ComponentModel.ISupportInitialize)booksGridView).BeginInit();
             SuspendLayout();
             // 
             // AdminPanelButton
             // 
-            AdminPanelButton.Location = new Point(636, 365);
+            AdminPanelButton.Location = new Point(807, 190);
             AdminPanelButton.Name = "AdminPanelButton";
             AdminPanelButton.Size = new Size(136, 54);
             AdminPanelButton.TabIndex = 0;
@@ -149,7 +151,7 @@
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(651, 347);
+            label3.Location = new Point(822, 172);
             label3.Name = "label3";
             label3.Size = new Size(121, 15);
             label3.TabIndex = 12;
@@ -165,11 +167,33 @@
             EditSelectedBookButton.UseVisualStyleBackColor = true;
             EditSelectedBookButton.Click += EditSelectedBookButton_Click;
             // 
+            // ShowOverdueBooksButton
+            // 
+            ShowOverdueBooksButton.Location = new Point(636, 364);
+            ShowOverdueBooksButton.Name = "ShowOverdueBooksButton";
+            ShowOverdueBooksButton.Size = new Size(136, 43);
+            ShowOverdueBooksButton.TabIndex = 14;
+            ShowOverdueBooksButton.Text = "ShowOverdueBooks";
+            ShowOverdueBooksButton.UseVisualStyleBackColor = true;
+            ShowOverdueBooksButton.Click += ShowOverdueBooksButton_Click;
+            // 
+            // ShowAllLibraryButton
+            // 
+            ShowAllLibraryButton.Location = new Point(792, 364);
+            ShowAllLibraryButton.Name = "ShowAllLibraryButton";
+            ShowAllLibraryButton.Size = new Size(136, 43);
+            ShowAllLibraryButton.TabIndex = 15;
+            ShowAllLibraryButton.Text = "ShowAllLibrary";
+            ShowAllLibraryButton.UseVisualStyleBackColor = true;
+            ShowAllLibraryButton.Click += ShowAllLibraryButton_Click;
+            // 
             // LibraryForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(784, 441);
+            ClientSize = new Size(955, 441);
+            Controls.Add(ShowAllLibraryButton);
+            Controls.Add(ShowOverdueBooksButton);
             Controls.Add(EditSelectedBookButton);
             Controls.Add(label3);
             Controls.Add(label2);
@@ -207,5 +231,7 @@
         private Label label2;
         private Label label3;
         private Button EditSelectedBookButton;
+        private Button ShowOverdueBooksButton;
+        private Button ShowAllLibraryButton;
     }
 }

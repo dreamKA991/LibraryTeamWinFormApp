@@ -1,5 +1,4 @@
 ﻿using Npgsql;
-using System.Data.Common;
 
 namespace LibraryTeamWinFormApp
 {
@@ -24,11 +23,11 @@ namespace LibraryTeamWinFormApp
             switch (comboBox.SelectedIndex)
             {
                 case 0:
-                    return "reader";
+                    return "читач";
                 case 1:
-                    return "librarian";
+                    return "бібліотекар";
                 case 2:
-                    return "admin";
+                    return "адміністратор";
                 default:
                     return string.Empty;
             }
@@ -43,6 +42,7 @@ namespace LibraryTeamWinFormApp
             }
             return false;
         }
+
         public static bool IsLoginExistsInDataBase(this NpgsqlConnection dbConnection,string login)
         {
             try

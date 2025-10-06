@@ -42,7 +42,7 @@
             // 
             comboBoxRights.ForeColor = SystemColors.WindowText;
             comboBoxRights.FormattingEnabled = true;
-            comboBoxRights.Items.AddRange(new object[] { "Reader", "Librarian", "Admin" });
+            comboBoxRights.Items.AddRange(new object[] { "Читач", "Бібліотекар", "Адміністратор" });
             comboBoxRights.Location = new Point(122, 164);
             comboBoxRights.Name = "comboBoxRights";
             comboBoxRights.Size = new Size(101, 23);

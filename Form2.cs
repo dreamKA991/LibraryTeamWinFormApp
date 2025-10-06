@@ -35,7 +35,7 @@ namespace LibraryTeamWinFormApp
             {
                 comboBoxRights.BackColor = SystemColors.Window;
             }
-            if(DBConnection.IsLoginExistsInDataBase(LoginTextBox.Text)) isValid = false;
+            if (DBConnection.IsLoginExistsInDataBase(LoginTextBox.Text)) isValid = false;
             return isValid;
         }
 
@@ -62,6 +62,11 @@ namespace LibraryTeamWinFormApp
             {
                 MessageBox.Show($"Error registering user: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void comboBoxRights_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }
