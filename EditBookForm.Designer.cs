@@ -37,57 +37,65 @@
             // 
             // SetButton
             // 
-            SetButton.Location = new Point(73, 180);
+            SetButton.Font = new Font("Sitka Text", 10.1999989F);
+            SetButton.Location = new Point(83, 240);
+            SetButton.Margin = new Padding(3, 4, 3, 4);
             SetButton.Name = "SetButton";
-            SetButton.Size = new Size(98, 39);
+            SetButton.Size = new Size(123, 36);
             SetButton.TabIndex = 0;
-            SetButton.Text = "Set";
+            SetButton.Text = "Встановити";
             SetButton.UseVisualStyleBackColor = true;
             SetButton.Click += SetButton_Click;
             // 
             // TitleBookTextBox
             // 
-            TitleBookTextBox.Location = new Point(33, 56);
+            TitleBookTextBox.Font = new Font("Sitka Text", 10.1999989F);
+            TitleBookTextBox.Location = new Point(38, 75);
+            TitleBookTextBox.Margin = new Padding(3, 4, 3, 4);
             TitleBookTextBox.Name = "TitleBookTextBox";
-            TitleBookTextBox.Size = new Size(187, 23);
+            TitleBookTextBox.Size = new Size(213, 29);
             TitleBookTextBox.TabIndex = 1;
             // 
             // ISBNBookTextBox
             // 
-            ISBNBookTextBox.Location = new Point(33, 131);
+            ISBNBookTextBox.Font = new Font("Sitka Text", 10.1999989F);
+            ISBNBookTextBox.Location = new Point(38, 175);
+            ISBNBookTextBox.Margin = new Padding(3, 4, 3, 4);
             ISBNBookTextBox.Name = "ISBNBookTextBox";
-            ISBNBookTextBox.Size = new Size(187, 23);
+            ISBNBookTextBox.Size = new Size(213, 29);
             ISBNBookTextBox.TabIndex = 2;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(86, 31);
+            label1.Font = new Font("Sitka Text", 10.1999989F);
+            label1.Location = new Point(98, 41);
             label1.Name = "label1";
-            label1.Size = new Size(93, 15);
+            label1.Size = new Size(114, 24);
             label1.TabIndex = 3;
-            label1.Text = "The title of book";
-            label1.Click += label1_Click;
+            label1.Text = "Назва книги";
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(89, 104);
+            label2.Font = new Font("Sitka Text", 10.1999989F);
+            label2.Location = new Point(102, 139);
             label2.Name = "label2";
-            label2.Size = new Size(77, 15);
+            label2.Size = new Size(107, 24);
             label2.TabIndex = 4;
-            label2.Text = "ISBN number";
+            label2.Text = "ISBN номер";
             // 
             // EditBookForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(261, 252);
+            ClientSize = new Size(298, 336);
             Controls.Add(label2);
             Controls.Add(label1);
             Controls.Add(ISBNBookTextBox);
             Controls.Add(TitleBookTextBox);
             Controls.Add(SetButton);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "EditBookForm";
             Text = "EditBookForm";
             Load += EditBookForm_Load;

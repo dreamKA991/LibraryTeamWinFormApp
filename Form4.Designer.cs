@@ -37,39 +37,46 @@
             // usersGridView
             // 
             usersGridView.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            usersGridView.Location = new Point(61, 12);
+            usersGridView.Location = new Point(70, 16);
+            usersGridView.Margin = new Padding(3, 4, 3, 4);
             usersGridView.Name = "usersGridView";
-            usersGridView.Size = new Size(542, 323);
+            usersGridView.RowHeadersWidth = 51;
+            usersGridView.Size = new Size(428, 431);
             usersGridView.TabIndex = 0;
             // 
             // btnDeleteUser
             // 
-            btnDeleteUser.Location = new Point(378, 370);
+            btnDeleteUser.Font = new Font("Sitka Text", 10.1999989F);
+            btnDeleteUser.Location = new Point(12, 484);
+            btnDeleteUser.Margin = new Padding(3, 4, 3, 4);
             btnDeleteUser.Name = "btnDeleteUser";
-            btnDeleteUser.Size = new Size(148, 36);
+            btnDeleteUser.Size = new Size(224, 48);
             btnDeleteUser.TabIndex = 1;
-            btnDeleteUser.Text = "btnDeleteUser";
+            btnDeleteUser.Text = "Видалити користувача";
             btnDeleteUser.UseVisualStyleBackColor = true;
             btnDeleteUser.Click += btnDeleteUser_Click;
             // 
             // btnEditUser
             // 
-            btnEditUser.Location = new Point(146, 370);
+            btnEditUser.Font = new Font("Sitka Text", 10.1999989F);
+            btnEditUser.Location = new Point(305, 484);
+            btnEditUser.Margin = new Padding(3, 4, 3, 4);
             btnEditUser.Name = "btnEditUser";
-            btnEditUser.Size = new Size(148, 36);
+            btnEditUser.Size = new Size(224, 48);
             btnEditUser.TabIndex = 2;
-            btnEditUser.Text = "btnEditUser";
+            btnEditUser.Text = "Редагувати користувача";
             btnEditUser.UseVisualStyleBackColor = true;
             btnEditUser.Click += btnEditUser_Click;
             // 
             // AdminPanel
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(638, 438);
+            ClientSize = new Size(560, 584);
             Controls.Add(btnEditUser);
             Controls.Add(btnDeleteUser);
             Controls.Add(usersGridView);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "AdminPanel";
             Text = "Admin Panel";
             Load += AdminPanel_Load;
