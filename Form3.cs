@@ -40,10 +40,21 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string query;
-
+                if (rights != "читач")
+                {
+                    label1.Visible = TakeBookButton.Visible = ReturnBookButton.Visible = AddNewBookButton.Visible = EditSelectedBookButton.Visible = DeleteSelectedBook.Visible =
+                        ShowOverdueBooksButton.Visible = ShowAllLibraryButton.Visible = label2.Visible = true;
+                   
+                }
+                if (rights == "адміністратор")
+                {
+                    AdminPanelButton.Visible = label3.Visible = true;
+                }
                 if (rights == "читач")
                 {
                     query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability FROM books ORDER BY id";
+                    this.Width = 600;
+                    booksGridView.Width = 490;
                 }
                 else if (rights == "бібліотекар" || rights == "адміністратор")
                 {

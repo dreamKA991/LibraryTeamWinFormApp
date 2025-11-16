@@ -98,7 +98,9 @@ namespace LibraryTeamWinFormApp
             Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
 
             // Кнопки: додати книгу та скасувати
-            Button[] buttons = { AddNewBookButton, (Button)CancelButton };
+            Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null
+    ? new[] { AddNewBookButton, cancelBtn }
+    : new[] { AddNewBookButton };
             foreach (var btn in buttons)
             {
                 btn.BackColor = buttonBase;

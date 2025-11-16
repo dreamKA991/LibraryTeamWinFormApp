@@ -42,47 +42,46 @@
             // 
             DBStatusLabel.AutoSize = true;
             DBStatusLabel.Font = new Font("Sitka Text", 10.1999989F);
-            DBStatusLabel.Location = new Point(140, 32);
+            DBStatusLabel.Location = new Point(122, 24);
             DBStatusLabel.Name = "DBStatusLabel";
-            DBStatusLabel.Size = new Size(56, 24);
+            DBStatusLabel.Size = new Size(46, 20);
             DBStatusLabel.TabIndex = 0;
             DBStatusLabel.Text = "label1";
             // 
             // LoginTextBox
             // 
-            LoginTextBox.Location = new Point(74, 84);
-            LoginTextBox.Margin = new Padding(3, 4, 3, 4);
+            LoginTextBox.Location = new Point(64, 82);
             LoginTextBox.Name = "LoginTextBox";
-            LoginTextBox.Size = new Size(180, 27);
+            LoginTextBox.Size = new Size(158, 23);
             LoginTextBox.TabIndex = 1;
             // 
             // label2
             // 
             label2.AutoSize = true;
             label2.Font = new Font("Sitka Text", 10.1999989F, FontStyle.Regular, GraphicsUnit.Point, 204);
-            label2.Location = new Point(105, 12);
+            label2.Location = new Point(69, 4);
             label2.Name = "label2";
-            label2.Size = new Size(143, 24);
+            label2.Size = new Size(153, 20);
             label2.TabIndex = 2;
-            label2.Text = "DataBase Status:";
+            label2.Text = "Підключення до БД:";
+            label2.Click += label2_Click;
             // 
             // PasswordTextBox
             // 
-            PasswordTextBox.Location = new Point(73, 143);
-            PasswordTextBox.Margin = new Padding(3, 4, 3, 4);
+            PasswordTextBox.Location = new Point(64, 131);
             PasswordTextBox.Name = "PasswordTextBox";
-            PasswordTextBox.Size = new Size(180, 27);
+            PasswordTextBox.PasswordChar = '*';
+            PasswordTextBox.Size = new Size(158, 23);
             PasswordTextBox.TabIndex = 3;
-            //                                                                  
+            // 
             // SignInButton
             // 
             SignInButton.Font = new Font("Sitka Text", 10.1999989F);
-            SignInButton.Location = new Point(73, 201);
-            SignInButton.Margin = new Padding(3, 4, 3, 4);
+            SignInButton.Location = new Point(64, 160);
             SignInButton.Name = "SignInButton";
-            SignInButton.Size = new Size(181, 31);
+            SignInButton.Size = new Size(158, 32);
             SignInButton.TabIndex = 4;
-            SignInButton.Text = "SIGN IN";
+            SignInButton.Text = "Увійти";
             SignInButton.UseVisualStyleBackColor = true;
             SignInButton.Click += onRegisterButton_Click;
             // 
@@ -90,39 +89,38 @@
             // 
             label3.AutoSize = true;
             label3.Font = new Font("Sitka Text", 10.1999989F);
-            label3.Location = new Point(139, 60);
+            label3.Location = new Point(122, 59);
             label3.Name = "label3";
-            label3.Size = new Size(63, 24);
+            label3.Size = new Size(53, 20);
             label3.TabIndex = 5;
-            label3.Text = "LOGIN";
+            label3.Text = "ЛОГІН";
             // 
             // label4
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Sitka Text", 10.1999989F);
-            label4.Location = new Point(123, 119);
+            label4.Location = new Point(115, 108);
             label4.Name = "label4";
-            label4.Size = new Size(102, 24);
+            label4.Size = new Size(66, 20);
             label4.TabIndex = 6;
-            label4.Text = "PASSWORD";
+            label4.Text = "ПАРОЛЬ";
             // 
             // AddUserButton
             // 
             AddUserButton.Font = new Font("Sitka Text", 10.1999989F);
-            AddUserButton.Location = new Point(75, 240);
-            AddUserButton.Margin = new Padding(3, 4, 3, 4);
+            AddUserButton.Location = new Point(64, 198);
             AddUserButton.Name = "AddUserButton";
-            AddUserButton.Size = new Size(179, 31);
+            AddUserButton.Size = new Size(157, 32);
             AddUserButton.TabIndex = 7;
-            AddUserButton.Text = "ADD USER";
+            AddUserButton.Text = "Зареєструватись";
             AddUserButton.UseVisualStyleBackColor = true;
             AddUserButton.Click += AddUserButton_Click;
             // 
             // StartForm
             // 
-            AutoScaleDimensions = new SizeF(8F, 20F);
+            AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(302, 335);
+            ClientSize = new Size(264, 251);
             Controls.Add(AddUserButton);
             Controls.Add(label4);
             Controls.Add(label3);
@@ -131,7 +129,6 @@
             Controls.Add(label2);
             Controls.Add(LoginTextBox);
             Controls.Add(DBStatusLabel);
-            Margin = new Padding(3, 4, 3, 4);
             Name = "StartForm";
             Text = "Auntheficate";
             Load += Form1_Load;

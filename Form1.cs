@@ -1,4 +1,4 @@
-using System;
+п»їusing System;
 using System.Drawing;
 using System.Windows.Forms;
 using Npgsql;
@@ -7,7 +7,7 @@ namespace LibraryTeamWinFormApp
 {
     public partial class StartForm : Form
     {
-        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=1234;Database=librarydatabase";
+        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=739809;Database=LibraryDataBase";
         RegisterForm? registrationForm = null;
         LibraryForm? libraryForm = null;
         NpgsqlConnection? DBConnection = null;
@@ -35,7 +35,7 @@ namespace LibraryTeamWinFormApp
         {
             if (DBConnection == null)
             {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("РќРµРјР°С” РїС–РґРєР»СЋС‡РµРЅРЅСЏ РґРѕ Р±Р°Р·Рё РґР°РЅРёС…!", "РџРѕРјРёР»РєР°", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
 
@@ -60,17 +60,17 @@ namespace LibraryTeamWinFormApp
                             string rights = reader["rights"]?.ToString() ?? string.Empty;
                             int id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : -1;
 
-                            // Переклад прав на українську
+                            // РџРµСЂРµРєР»Р°Рґ РїСЂР°РІ РЅР° СѓРєСЂР°С—РЅСЃСЊРєСѓ
                             string rightsUA = rights switch
                             {
-                                "reader" => "читач",
-                                "librarian" => "бібліотекар",
-                                "admin" => "адмін",
+                                "reader" => "С‡РёС‚Р°С‡",
+                                "librarian" => "Р±С–Р±Р»С–РѕС‚РµРєР°СЂ",
+                                "admin" => "Р°РґРјС–РЅ",
                                 _ => rights
                             };
 
-                            MessageBox.Show($"Ласкаво просимо, {login}! Ваша роль: {rightsUA}",
-                                "Успішний вхід", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            MessageBox.Show($"Р›Р°СЃРєР°РІРѕ РїСЂРѕСЃРёРјРѕ, {login}! Р’Р°С€Р° СЂРѕР»СЊ: {rightsUA}",
+                                "РЈСЃРїС–С€РЅРёР№ РІС…С–Рґ", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                             reader.Close();
 
@@ -90,7 +90,7 @@ namespace LibraryTeamWinFormApp
                         }
                         else
                         {
-                            MessageBox.Show("Невірний логін або пароль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("РќРµРІС–СЂРЅРёР№ Р»РѕРіС–РЅ Р°Р±Рѕ РїР°СЂРѕР»СЊ!", "РџРѕРјРёР»РєР°", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return false;
                         }
                     }
@@ -98,7 +98,7 @@ namespace LibraryTeamWinFormApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка авторизації:\n{ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"РџРѕРјРёР»РєР° Р°РІС‚РѕСЂРёР·Р°С†С–С—:\n{ex.Message}", "РџРѕРјРёР»РєР°", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
@@ -118,13 +118,13 @@ namespace LibraryTeamWinFormApp
                 DBConnection = new NpgsqlConnection(connectionString);
                 DBConnection.Open();
                 DBStatusLabel.BackColor = Color.LightGreen;
-                DBStatusLabel.Text = "Підключення: успішне";
+                DBStatusLabel.Text = "вњ… РЈСЃРїС–С€РЅРµ";
             }
             catch
             {
                 DBConnection = null;
                 DBStatusLabel.BackColor = Color.Red;
-                DBStatusLabel.Text = "Підключення: помилка";
+                DBStatusLabel.Text = "вќЊ РџРѕРјРёР»РєР°";
             }
         }
 
@@ -134,7 +134,7 @@ namespace LibraryTeamWinFormApp
 
             if (DBConnection == null)
             {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("РќРµРјР°С” РїС–РґРєР»СЋС‡РµРЅРЅСЏ РґРѕ Р±Р°Р·Рё РґР°РЅРёС…!", "РџРѕРјРёР»РєР°", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -199,6 +199,11 @@ namespace LibraryTeamWinFormApp
             Button[] buttons = { SignInButton, AddUserButton };
             foreach (var btn in buttons) btn.Left = (this.ClientSize.Width - btn.Width) / 2;
         }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
     public class UserInfo
@@ -206,6 +211,6 @@ namespace LibraryTeamWinFormApp
         public int Id = -1;
         public string Name = string.Empty;
         public string Password = string.Empty;
-        public string Rights = string.Empty; // тепер зберігає українські значення: читач, бібліотекар, адмін
+        public string Rights = string.Empty; // С‚РµРїРµСЂ Р·Р±РµСЂС–РіР°С” СѓРєСЂР°С—РЅСЃСЊРєС– Р·РЅР°С‡РµРЅРЅСЏ: С‡РёС‚Р°С‡, Р±С–Р±Р»С–РѕС‚РµРєР°СЂ, Р°РґРјС–РЅ
     }
 }

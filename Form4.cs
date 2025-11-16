@@ -75,6 +75,30 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
+            if (dbConnection != null)
+            {
+                try
+                {
+                    string checkQuery = "SELECT COUNT(*) FROM books WHERE fk_usertakedbook_id = @id";
+                    using (var checkCmd = new NpgsqlCommand(checkQuery, dbConnection))
+                    {
+                        checkCmd.Parameters.AddWithValue("@id", userId);
+                        object? result = checkCmd.ExecuteScalar();
+                        int takenCount = result != null ? Convert.ToInt32(result) : 0;
+                        if (takenCount > 0)
+                        {
+                            MessageBox.Show($"Користувач '{login}' має {takenCount} взяту/взятих книгу(и). Поверніть книги перед видаленням.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Помилка перевірки книг користувача: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+
             var confirm = MessageBox.Show($"Видалити користувача '{login}'?", "Підтвердження", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm == DialogResult.Yes && dbConnection != null)
             {
@@ -82,7 +106,7 @@ namespace LibraryTeamWinFormApp
                 using (var cmd = new NpgsqlCommand(query, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("@id", userId);
-                    cmd.ExecuteNonQuery();
+                    cmd.ExecuteNonQuery();                                              
                 }
                 LoadUsers();
             }

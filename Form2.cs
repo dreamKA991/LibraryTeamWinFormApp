@@ -22,7 +22,7 @@ namespace LibraryTeamWinFormApp
 
             // Додаємо українські права користувачів
             comboBoxRights.Items.Clear();
-            comboBoxRights.Items.AddRange(new string[] { "читач", "бібліотекар", "адмін" });
+            comboBoxRights.Items.AddRange(new string[] { "читач", "бібліотекар", "адміністратор" });
             comboBoxRights.SelectedIndex = 0; // за замовчуванням – читач
         }
 
@@ -138,6 +138,11 @@ namespace LibraryTeamWinFormApp
         }
 
         private void label2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBoxRights_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }

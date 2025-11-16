@@ -123,7 +123,9 @@ namespace LibraryTeamWinFormApp
             Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
 
             // Кнопки: "Оновити" та "Скасувати"
-            Button[] buttons = { SetButton, (Button)CancelButton };
+             Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null
+    ? new[] { SetButton, cancelBtn }
+    : new[] { SetButton };
             foreach (var btn in buttons)
             {
                 btn.BackColor = buttonBase;
