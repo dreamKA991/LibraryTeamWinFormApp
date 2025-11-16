@@ -40,79 +40,87 @@
             // 
             // comboBoxRights
             // 
+            comboBoxRights.Font = new Font("Sitka Text", 10.1999989F);
             comboBoxRights.ForeColor = SystemColors.WindowText;
             comboBoxRights.FormattingEnabled = true;
             comboBoxRights.Items.AddRange(new object[] { "Читач", "Бібліотекар", "Адміністратор" });
             comboBoxRights.Location = new Point(122, 164);
             comboBoxRights.Name = "comboBoxRights";
-            comboBoxRights.Size = new Size(101, 23);
+            comboBoxRights.Size = new Size(122, 28);
             comboBoxRights.TabIndex = 23;
-            comboBoxRights.Text = "Select role";
+            comboBoxRights.Text = "Виберіть роль";
             comboBoxRights.SelectedIndexChanged += comboBoxRights_SelectedIndexChanged;
             // 
             // label2
             // 
             label2.AutoSize = true;
+            label2.Font = new Font("Sitka Text", 10.1999989F);
             label2.Location = new Point(64, 167);
             label2.Name = "label2";
-            label2.Size = new Size(38, 15);
+            label2.Size = new Size(51, 20);
             label2.TabIndex = 22;
-            label2.Text = "ROLE:";
+            label2.Text = "РОЛЬ:";
+            label2.Click += label2_Click;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
-            label1.Location = new Point(120, 14);
+            label1.Font = new Font("Sitka Text", 10.1999989F);
+            label1.Location = new Point(88, 14);
             label1.Name = "label1";
-            label1.Size = new Size(53, 15);
+            label1.Size = new Size(114, 20);
             label1.TabIndex = 21;
-            label1.Text = "Settings";
+            label1.Text = "Налаштування";
             // 
             // label4
             // 
             label4.AutoSize = true;
+            label4.Font = new Font("Sitka Text", 10.1999989F);
             label4.Location = new Point(108, 91);
             label4.Name = "label4";
-            label4.Size = new Size(68, 15);
+            label4.Size = new Size(66, 20);
             label4.TabIndex = 20;
-            label4.Text = "PASSWORD";
+            label4.Text = "ПАРОЛЬ";
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(122, 47);
+            label3.Font = new Font("Sitka Text", 10.1999989F);
+            label3.Location = new Point(122, 42);
             label3.Name = "label3";
-            label3.Size = new Size(42, 15);
+            label3.Size = new Size(42, 20);
             label3.TabIndex = 19;
-            label3.Text = "LOGIN";
+            label3.Text = "ВХІД";
             // 
             // SetUpButton
             // 
+            SetUpButton.Font = new Font("Sitka Text", 10.1999989F);
             SetUpButton.Location = new Point(65, 215);
             SetUpButton.Name = "SetUpButton";
-            SetUpButton.Size = new Size(158, 47);
+            SetUpButton.Size = new Size(158, 28);
             SetUpButton.TabIndex = 18;
-            SetUpButton.Text = "Set";
+            SetUpButton.Text = "Встановити";
             SetUpButton.UseVisualStyleBackColor = true;
             SetUpButton.Click += SetUpButton_Click;
             // 
             // PasswordTextBox
             // 
-            PasswordTextBox.Location = new Point(64, 109);
+            PasswordTextBox.Font = new Font("Sitka Text", 10.1999989F);
+            PasswordTextBox.Location = new Point(64, 114);
             PasswordTextBox.Name = "PasswordTextBox";
-            PasswordTextBox.PlaceholderText = "Type new password";
-            PasswordTextBox.Size = new Size(158, 23);
+            PasswordTextBox.PlaceholderText = "Введіть новий пароль";
+            PasswordTextBox.Size = new Size(158, 25);
             PasswordTextBox.TabIndex = 17;
             PasswordTextBox.TextAlign = HorizontalAlignment.Center;
             PasswordTextBox.TextChanged += PasswordTextBox_TextChanged;
             // 
             // LoginTextBox
             // 
+            LoginTextBox.Font = new Font("Sitka Text", 10.1999989F);
             LoginTextBox.Location = new Point(65, 65);
             LoginTextBox.Name = "LoginTextBox";
-            LoginTextBox.PlaceholderText = "Type new login";
-            LoginTextBox.Size = new Size(158, 23);
+            LoginTextBox.PlaceholderText = "Введіть новий логін";
+            LoginTextBox.Size = new Size(158, 25);
             LoginTextBox.TabIndex = 16;
             LoginTextBox.TextAlign = HorizontalAlignment.Center;
             // 
@@ -131,7 +139,6 @@
             Controls.Add(LoginTextBox);
             Name = "UserSettings";
             Text = "UserSettings";
-            Load += Form5_Load;
             ResumeLayout(false);
             PerformLayout();
         }

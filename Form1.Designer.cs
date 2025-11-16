@@ -41,15 +41,16 @@
             // DBStatusLabel
             // 
             DBStatusLabel.AutoSize = true;
-            DBStatusLabel.Location = new Point(155, 9);
+            DBStatusLabel.Font = new Font("Sitka Text", 10.1999989F);
+            DBStatusLabel.Location = new Point(122, 24);
             DBStatusLabel.Name = "DBStatusLabel";
-            DBStatusLabel.Size = new Size(38, 15);
+            DBStatusLabel.Size = new Size(46, 20);
             DBStatusLabel.TabIndex = 0;
             DBStatusLabel.Text = "label1";
             // 
             // LoginTextBox
             // 
-            LoginTextBox.Location = new Point(65, 63);
+            LoginTextBox.Location = new Point(64, 82);
             LoginTextBox.Name = "LoginTextBox";
             LoginTextBox.Size = new Size(158, 23);
             LoginTextBox.TabIndex = 1;
@@ -57,54 +58,61 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(56, 9);
+            label2.Font = new Font("Sitka Text", 10.1999989F, FontStyle.Regular, GraphicsUnit.Point, 204);
+            label2.Location = new Point(69, 4);
             label2.Name = "label2";
-            label2.Size = new Size(93, 15);
+            label2.Size = new Size(153, 20);
             label2.TabIndex = 2;
-            label2.Text = "DataBase Status:";
+            label2.Text = "Підключення до БД:";
+            label2.Click += label2_Click;
             // 
             // PasswordTextBox
             // 
-            PasswordTextBox.Location = new Point(64, 107);
+            PasswordTextBox.Location = new Point(64, 131);
             PasswordTextBox.Name = "PasswordTextBox";
+            PasswordTextBox.PasswordChar = '*';
             PasswordTextBox.Size = new Size(158, 23);
             PasswordTextBox.TabIndex = 3;
             // 
             // SignInButton
             // 
-            SignInButton.Location = new Point(64, 151);
+            SignInButton.Font = new Font("Sitka Text", 10.1999989F);
+            SignInButton.Location = new Point(64, 160);
             SignInButton.Name = "SignInButton";
-            SignInButton.Size = new Size(158, 47);
+            SignInButton.Size = new Size(158, 32);
             SignInButton.TabIndex = 4;
-            SignInButton.Text = "SIGN IN";
+            SignInButton.Text = "Увійти";
             SignInButton.UseVisualStyleBackColor = true;
             SignInButton.Click += onRegisterButton_Click;
             // 
             // label3
             // 
             label3.AutoSize = true;
-            label3.Location = new Point(122, 45);
+            label3.Font = new Font("Sitka Text", 10.1999989F);
+            label3.Location = new Point(122, 59);
             label3.Name = "label3";
-            label3.Size = new Size(42, 15);
+            label3.Size = new Size(53, 20);
             label3.TabIndex = 5;
-            label3.Text = "LOGIN";
+            label3.Text = "ЛОГІН";
             // 
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new Point(108, 89);
+            label4.Font = new Font("Sitka Text", 10.1999989F);
+            label4.Location = new Point(115, 108);
             label4.Name = "label4";
-            label4.Size = new Size(68, 15);
+            label4.Size = new Size(66, 20);
             label4.TabIndex = 6;
-            label4.Text = "PASSWORD";
+            label4.Text = "ПАРОЛЬ";
             // 
             // AddUserButton
             // 
-            AddUserButton.Location = new Point(101, 204);
+            AddUserButton.Font = new Font("Sitka Text", 10.1999989F);
+            AddUserButton.Location = new Point(64, 198);
             AddUserButton.Name = "AddUserButton";
-            AddUserButton.Size = new Size(75, 23);
+            AddUserButton.Size = new Size(157, 32);
             AddUserButton.TabIndex = 7;
-            AddUserButton.Text = "ADD USER";
+            AddUserButton.Text = "Зареєструватись";
             AddUserButton.UseVisualStyleBackColor = true;
             AddUserButton.Click += AddUserButton_Click;
             // 

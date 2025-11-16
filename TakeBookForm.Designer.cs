@@ -38,60 +38,71 @@
             // 
             // TakeBookButton
             // 
-            TakeBookButton.Location = new Point(128, 125);
+            TakeBookButton.Font = new Font("Sitka Text", 10.1999989F);
+            TakeBookButton.Location = new Point(86, 229);
+            TakeBookButton.Margin = new Padding(3, 4, 3, 4);
             TakeBookButton.Name = "TakeBookButton";
-            TakeBookButton.Size = new Size(169, 34);
+            TakeBookButton.Size = new Size(193, 45);
             TakeBookButton.TabIndex = 0;
-            TakeBookButton.Text = "TakeBookButton";
+            TakeBookButton.Text = "Взяти книгу";
             TakeBookButton.UseVisualStyleBackColor = true;
             TakeBookButton.Click += TakeBookButton_Click;
             // 
             // label1
             // 
             label1.AutoSize = true;
-            label1.Location = new Point(45, 27);
+            label1.Font = new Font("Sitka Text", 10.1999989F);
+            label1.Location = new Point(51, 36);
             label1.Name = "label1";
-            label1.Size = new Size(77, 15);
+            label1.Size = new Size(307, 24);
             label1.TabIndex = 2;
-            label1.Text = "Type user's id";
+            label1.Text = "Введіть ідентифікатор користувача";
             // 
             // returnDatePicker
             // 
-            returnDatePicker.Location = new Point(197, 58);
+            returnDatePicker.Font = new Font("Sitka Text", 10.1999989F);
+            returnDatePicker.Location = new Point(78, 176);
+            returnDatePicker.Margin = new Padding(3, 4, 3, 4);
             returnDatePicker.MinDate = new DateTime(2025, 10, 5, 0, 0, 0, 0);
             returnDatePicker.Name = "returnDatePicker";
-            returnDatePicker.Size = new Size(200, 23);
+            returnDatePicker.Size = new Size(228, 29);
             returnDatePicker.TabIndex = 3;
+            returnDatePicker.ValueChanged += returnDatePicker_ValueChanged;
             // 
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(265, 27);
+            label2.Font = new Font("Sitka Text", 10.1999989F);
+            label2.Location = new Point(115, 137);
             label2.Name = "label2";
-            label2.Size = new Size(68, 15);
+            label2.Size = new Size(155, 24);
             label2.TabIndex = 4;
-            label2.Text = "Return date";
+            label2.Text = "Дата повернення";
             // 
             // numericUpDown1
             // 
-            numericUpDown1.Location = new Point(31, 58);
+            numericUpDown1.Font = new Font("Sitka Text", 10.1999989F);
+            numericUpDown1.Location = new Point(122, 78);
+            numericUpDown1.Margin = new Padding(3, 5, 3, 5);
             numericUpDown1.Maximum = new decimal(new int[] { 99999, 0, 0, 0 });
             numericUpDown1.Minimum = new decimal(new int[] { 1, 0, 0, 0 });
             numericUpDown1.Name = "numericUpDown1";
-            numericUpDown1.Size = new Size(120, 23);
+            numericUpDown1.Size = new Size(157, 29);
             numericUpDown1.TabIndex = 5;
             numericUpDown1.Value = new decimal(new int[] { 1, 0, 0, 0 });
+            numericUpDown1.ValueChanged += numericUpDown1_ValueChanged;
             // 
             // TakeBookForm
             // 
-            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(426, 179);
+            ClientSize = new Size(384, 303);
             Controls.Add(numericUpDown1);
             Controls.Add(label2);
             Controls.Add(returnDatePicker);
             Controls.Add(label1);
             Controls.Add(TakeBookButton);
+            Margin = new Padding(3, 4, 3, 4);
             Name = "TakeBookForm";
             Text = "TakeBookForm";
             Load += TakeBookForm_Load;

@@ -1,13 +1,21 @@
 ﻿using Npgsql;
+using System;
+using System.Data;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace LibraryTeamWinFormApp
 {
     public partial class TakeBookForm : Form
     {
         NpgsqlConnection? dbConnection = null;
-        LibraryForm mainForm =null;
+        LibraryForm mainForm = null;
         int bookID;
         string bookTitle;
+
+        private ComboBox comboBoxUserIds = new ComboBox();
+        private Label selectedLoginLabel = new Label();
+
         public TakeBookForm(NpgsqlConnection? dbConnection, int bookID, string bookTitle, LibraryForm mainForm)
         {
             InitializeComponent();
@@ -15,25 +23,121 @@ namespace LibraryTeamWinFormApp
             this.bookID = bookID;
             this.bookTitle = bookTitle;
             this.mainForm = mainForm;
+
+            comboBoxUserIds.DropDownStyle = ComboBoxStyle.DropDownList;
+            comboBoxUserIds.Width = 140;
+            comboBoxUserIds.Height = 28;
+            comboBoxUserIds.SelectedIndexChanged += ComboBoxUserIds_SelectedIndexChanged;
+            comboBoxUserIds.Name = "comboBoxUserIds";
+
+            selectedLoginLabel.AutoSize = true;
+            selectedLoginLabel.Height = 28;
+            selectedLoginLabel.TextAlign = ContentAlignment.MiddleLeft;
+            selectedLoginLabel.Name = "selectedLoginLabel";
+
+            this.Controls.Add(comboBoxUserIds);
+            this.Controls.Add(selectedLoginLabel);
         }
 
         private void TakeBookForm_Load(object sender, EventArgs e)
         {
-            this.Text = $"Take Book - ID {bookID} {bookTitle}";
+            this.Text = $"Взяти книгу - ID {bookID} {bookTitle}";
             returnDatePicker.MinDate = DateTime.Now.AddDays(1);
+            ApplyColorsAndAlignment();
+
+            if (numericUpDown1 != null)
+            {
+                numericUpDown1.Visible = false;
+                numericUpDown1.Enabled = false;
+            }
+
+            int topPosition = numericUpDown1 != null ? numericUpDown1.Top : 60;
+            comboBoxUserIds.Top = topPosition;
+            selectedLoginLabel.Top = topPosition + 4; 
+
+            CenterControls();
+            PopulateUsersCombo();
+        }
+
+        private void PopulateUsersCombo()
+        {
+            if (dbConnection == null) return;
+
+            try
+            {
+                string query = "SELECT id, name FROM users ORDER BY id";
+                using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
+                {
+                    var table = new DataTable();
+                    adapter.Fill(table);
+
+                    if (table.Columns.Contains("id") && table.Columns.Contains("name"))
+                    {
+                        comboBoxUserIds.DataSource = table;
+                        comboBoxUserIds.DisplayMember = "id";    
+                        comboBoxUserIds.ValueMember = "id";
+                        if (comboBoxUserIds.Items.Count > 0)
+                        {
+                            comboBoxUserIds.SelectedIndex = 0;
+                            UpdateSelectedLoginLabel();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Помилка завантаження користувачів: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ComboBoxUserIds_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            UpdateSelectedLoginLabel();
+        }
+
+        private void UpdateSelectedLoginLabel()
+        {
+            if (comboBoxUserIds.SelectedItem is DataRowView drv)
+            {
+                string name = drv["name"]?.ToString() ?? string.Empty;
+                selectedLoginLabel.Text = $"Логін: {name}";
+            }
+            else
+            {
+                selectedLoginLabel.Text = string.Empty;
+            }
         }
 
         private void TakeBookButton_Click(object sender, EventArgs e)
         {
-            int userId = (int)numericUpDown1.Value;
+            int userId;
             string login = string.Empty;
 
-            // date for ui
-            string dateOnly = returnDatePicker.Value.ToString("dd-MM-yyyy");
+            if (comboBoxUserIds.SelectedValue == null)
+            {
+                MessageBox.Show("Оберіть ID користувача зі списку.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
 
-            // dates for db
+            try
+            {
+                userId = Convert.ToInt32(comboBoxUserIds.SelectedValue);
+            }
+            catch
+            {
+                MessageBox.Show("Невірний вибір користувача.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            string dateOnly = returnDatePicker.Value.ToString("dd-MM-yyyy");
             DateTime parsedDateToPut = returnDatePicker.Value.Date;
             DateTime parsedDateNow = DateTime.Now.Date;
+                
+            // логін для combobox
+            if (comboBoxUserIds.SelectedItem is DataRowView rv)
+            {
+                login = rv["name"]?.ToString() ?? string.Empty;
+            }
 
             try
             {
@@ -46,21 +150,22 @@ namespace LibraryTeamWinFormApp
                     {
                         if (!reader.Read())
                         {
-                            MessageBox.Show($"User with ID {userId} not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"Користувача з ID {userId} не знайдено.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
 
-                        login = reader["name"].ToString();
+                        if (string.IsNullOrEmpty(login))
+                            login = reader["name"].ToString();
 
-                        bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
-                            $"Is data correct?\n Login: {login}\n Return date: {dateOnly}",
+                        bool approved = Microsoft.VisualBasic.Interaction.MsgBox(
+                            $"Дані правильні?\nКористувач: {login}\nДата повернення: {dateOnly}",
                             Microsoft.VisualBasic.MsgBoxStyle.YesNo,
-                            "Librarian Approval"
+                            "Підтвердження бібліотекаря"
                         ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
 
-                        if (!isLibrarianApproved)
+                        if (!approved)
                         {
-                            MessageBox.Show("Librarian approval is required to take a book.", "Approval Needed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            MessageBox.Show("Потрібне підтвердження бібліотекаря.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return;
                         }
                     }
@@ -68,40 +173,117 @@ namespace LibraryTeamWinFormApp
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading users: " + ex.Message);
+                MessageBox.Show("Помилка завантаження користувачів: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             try
             {
-                string sql = "UPDATE books SET putToDate = @putToDate, takedDate = @takedDate, fk_usertakedbook_id = @fk_usertakedbook_id WHERE id = @bookId";
-
+                string sql = "UPDATE books SET putToDate=@putToDate, takedDate=@takedDate, fk_usertakedbook_id=@fk_usertakedbook_id WHERE id=@bookId";
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("putToDate", parsedDateToPut);
                     cmd.Parameters.AddWithValue("takedDate", parsedDateNow);
                     cmd.Parameters.AddWithValue("fk_usertakedbook_id", userId);
                     cmd.Parameters.AddWithValue("bookId", bookID);
+                    int rows = cmd.ExecuteNonQuery();
 
-                    int rowsAffected = cmd.ExecuteNonQuery();
-
-                    if (rowsAffected > 0)
+                    if (rows > 0)
                     {
-                        MessageBox.Show($"Success.\nLogin: {login}\nReturn date: {dateOnly}", "Approval", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Успішно!\nКористувач: {login}\nДата повернення: {dateOnly}", "Підтвердження", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         this.Close();
                     }
                     else
                     {
-                        MessageBox.Show("Не удалось обновить данные. Проверьте ID пользователя.", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Не вдалося оновити дані.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Ошибка при обновлении пользователя:\n{ex.Message}", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Помилка бази даних:\n{ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             mainForm.UpdateBooksData();
         }
 
+        // --- Дизайн ---
+        private void ApplyColorsAndAlignment()
+        {
+            this.BackColor = ColorTranslator.FromHtml("#E8DCC8");
+            Color labelColor = ColorTranslator.FromHtml("#3A2A20");
+            Color textBoxColor = ColorTranslator.FromHtml("#F7F2E8");
+
+            foreach (Control ctrl in this.Controls)
+            {
+                if (ctrl is Label lbl)
+                {
+                    lbl.ForeColor = labelColor;
+                    lbl.BackColor = Color.Transparent;
+                    lbl.TextAlign = ContentAlignment.MiddleCenter;
+                }
+                else if (ctrl is Button btn)
+                {
+                    Color buttonBase = ColorTranslator.FromHtml("#3F2727");
+                    Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
+
+                    btn.BackColor = buttonBase;
+                    btn.ForeColor = Color.White;
+                    btn.FlatStyle = FlatStyle.Flat;
+                    btn.FlatAppearance.BorderSize = 0;
+                    btn.Cursor = Cursors.Hand;
+                    btn.MouseEnter += (s, e) => btn.BackColor = buttonHover;
+                    btn.MouseLeave += (s, e) => btn.BackColor = buttonBase;
+                }
+                else if (ctrl is NumericUpDown num)
+                {
+                    num.BackColor = textBoxColor;
+                    num.ForeColor = labelColor;
+                    num.TextAlign = HorizontalAlignment.Center;
+                }
+                else if (ctrl is ComboBox cb)
+                {
+                    cb.BackColor = textBoxColor;
+                    cb.ForeColor = labelColor;
+                    cb.Font = new Font("Sitka Text", 10.2f);
+                    cb.DropDownStyle = ComboBoxStyle.DropDownList;
+                }
+            }
+        }
+
+        private void CenterControls()
+        {
+            foreach (Control ctrl in this.Controls)
+            {
+                if (ctrl is Label && ctrl.Name != "selectedLoginLabel")
+                {
+                    ctrl.Left = (this.ClientSize.Width - ctrl.Width) / 2;
+                }
+                else if (ctrl is Button)
+                {
+                    ctrl.Left = (this.ClientSize.Width - ctrl.Width) / 2;
+                }
+                else if (ctrl is NumericUpDown)
+                {
+                    ctrl.Left = (this.ClientSize.Width - ctrl.Width) / 2;
+                }
+                else if (ctrl is DateTimePicker)
+                {
+                    ctrl.Left = (this.ClientSize.Width - ctrl.Width) / 2;
+                }
+                else if (ctrl is ComboBox cb && cb.Name == "comboBoxUserIds")
+                {
+                    cb.Left = (this.ClientSize.Width - cb.Width) / 2;
+                    selectedLoginLabel.Left = cb.Right + 10;
+                }
+            }
+        }
+
+        private void returnDatePicker_ValueChanged(object sender, EventArgs e)
+        {
+        }
+
+        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
+        {
+        }
     }
 }

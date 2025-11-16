@@ -2,7 +2,7 @@
 
 namespace LibraryTeamWinFormApp
 {
-    public static class AdditionalFormsFunctionalityExtension
+    public static class  AdditionalFormsFunctionalityExtension
     {
         public static bool ValidateTextBox(this TextBox textBox)
         {

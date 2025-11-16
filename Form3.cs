@@ -1,18 +1,21 @@
 ﻿using Npgsql;
+using System;
 using System.Data;
-using System.Net;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace LibraryTeamWinFormApp
 {
     public partial class LibraryForm : Form, IDisposable
     {
-        NpgsqlConnection? dbConnection;
-        UserInfo userInfo;
-        AdminPanel? adminPanelForm = null;
-        AddNewBookInLibrary AddNewBookInLibrary = null;
-        TakeBookForm? takeBookForm = null;
-        DataTable cachedDataTable;
-        EditBookForm? editBookForm = null;
+        private NpgsqlConnection? dbConnection;
+        private UserInfo userInfo;
+        private AdminPanel? adminPanelForm = null;
+        private AddNewBookInLibrary? addNewBookForm = null;
+        private TakeBookForm? takeBookForm = null;
+        private EditBookForm? editBookForm = null;
+        private DataTable cachedDataTable;
 
         public LibraryForm(NpgsqlConnection? dbConnection, UserInfo userInfo)
         {
@@ -20,98 +23,88 @@ namespace LibraryTeamWinFormApp
             this.dbConnection = dbConnection;
             this.userInfo = userInfo;
             this.FormClosed += (s, e) => Dispose();
+
+            ApplyColorsAndAlignment();
         }
 
         public void UpdateBooksData() => LoadBooks(userInfo.Rights);
 
-        private void Form3_Load(object sender, EventArgs e)
+        private void LibraryForm_Load(object sender, EventArgs e)
         {
-            this.Text = $"Library - {userInfo.Name} ({userInfo.Rights})";
+            this.Text = $"Бібліотека - {userInfo.Name} ({userInfo.Rights})";
             LoadBooks(userInfo.Rights);
         }
 
         private void LoadBooks(string rights)
         {
-            switch (rights)
+            try
             {
-                case "читач":
-                    try
-                    {
-                        string query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability FROM books ORDER BY id";
+                string query;
+                if (rights != "читач")
+                {
+                    label1.Visible = TakeBookButton.Visible = ReturnBookButton.Visible = AddNewBookButton.Visible = EditSelectedBookButton.Visible = DeleteSelectedBook.Visible =
+                        ShowOverdueBooksButton.Visible = ShowAllLibraryButton.Visible = label2.Visible = true;
+                   
+                }
+                if (rights == "адміністратор")
+                {
+                    AdminPanelButton.Visible = label3.Visible = true;
+                }
+                if (rights == "читач")
+                {
+                    query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability FROM books ORDER BY id";
+                    this.Width = 600;
+                    booksGridView.Width = 490;
+                }
+                else if (rights == "бібліотекар" || rights == "адміністратор")
+                {
+                    query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability, takeddate, puttodate FROM books ORDER BY id";
+                }
+                else
+                {
+                    MessageBox.Show("Невідомі права користувача.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
 
-                        using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
-                        {
-                            cachedDataTable = new DataTable();
-                            adapter.Fill(cachedDataTable);
-                            booksGridView.DataSource = cachedDataTable;
-                        }
+                using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
+                {
+                    cachedDataTable = new DataTable();
+                    adapter.Fill(cachedDataTable);
+                    booksGridView.DataSource = cachedDataTable;
+                }
 
-                        booksGridView.Columns["id"].HeaderText = "ID";
-                        booksGridView.Columns["title"].HeaderText = "Title";
-                        booksGridView.Columns["Title"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        booksGridView.Columns["availability"].HeaderText = "Availability";
-                        booksGridView.ReadOnly = true;
-                        this.Width = 600;
-                        booksGridView.Width = 490;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error loading books: " + ex.Message);
-                    }
-                    break;
-                case "бібліотекар":
-                case "адміністратор":
-                    try
-                    {
-                        string query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability, takeddate, puttodate FROM books ORDER BY id";
+                booksGridView.Columns["id"].HeaderText = "ID";
+                booksGridView.Columns["title"].HeaderText = "Назва книги";
+                booksGridView.Columns["title"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                booksGridView.Columns["availability"].HeaderText = "Доступність";
 
-                        using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
-                        {
-                            cachedDataTable = new DataTable();
-                            adapter.Fill(cachedDataTable);
-                            booksGridView.DataSource = cachedDataTable;
-                        }
+                if (rights != "читач")
+                {
+                    booksGridView.Columns["takeddate"].HeaderText = "Дата взяття";
+                    booksGridView.Columns["puttodate"].HeaderText = "Дата повернення";
+                }
 
-                        booksGridView.Columns["id"].HeaderText = "ID";
-                        booksGridView.Columns["title"].HeaderText = "Title";
-                        booksGridView.Columns["Title"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-                        booksGridView.Columns["availability"].HeaderText = "Availability";
-                        booksGridView.Columns["takeddate"].HeaderText = "Taked book date";
-                        booksGridView.Columns["puttodate"].HeaderText = "Put to date";
-                        booksGridView.ReadOnly = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show("Error loading books: " + ex.Message);
-                    }
-                    break;
-                    break;
-                default:
-                    MessageBox.Show("Unknown user rights.");
-                    break;
+                booksGridView.ReadOnly = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Помилка завантаження книг: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void AdminPanelButton_Click(object sender, EventArgs e)
         {
             if (adminPanelForm is not null)
-            {
                 adminPanelForm.Close();
-            }
+
             if (userInfo.Rights != "адміністратор")
             {
-                MessageBox.Show("Доступ заборонено. Тільки для адміністраторів.");
+                MessageBox.Show("Доступ заборонено. Тільки для адміністраторів.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
             adminPanelForm = new AdminPanel(dbConnection, userInfo);
             adminPanelForm.Show();
-        }
-
-        private void Dispose()
-        {
-            dbConnection?.Close();
-            dbConnection?.Dispose();
-            Application.Exit();
         }
 
         private void FindBookByNameButton_Click(object sender, EventArgs e)
@@ -121,45 +114,44 @@ namespace LibraryTeamWinFormApp
             if (string.IsNullOrEmpty(name))
             {
                 booksGridView.DataSource = cachedDataTable;
+                return;
             }
-            else
-            {
-                var filteredRows = cachedDataTable.AsEnumerable()
-                    .Where(row => row.Field<string>("title").ToLower().Contains(name));
 
-                DataTable filteredTable = filteredRows.Any()
-                    ? filteredRows.CopyToDataTable()
-                    : cachedDataTable.Clone();
+            var filteredRows = cachedDataTable.AsEnumerable()
+                .Where(row => row.Field<string>("title").ToLower().Contains(name));
 
-                booksGridView.DataSource = filteredTable;
-            }
+            DataTable filteredTable = filteredRows.Any()
+                ? filteredRows.CopyToDataTable()
+                : cachedDataTable.Clone();
+
+            booksGridView.DataSource = filteredTable;
         }
 
         private void TakeBookButton_Click(object sender, EventArgs e)
         {
             if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
             {
-                MessageBox.Show("Тiльки бібліотекарi та адміністратори можуть брати книги. Ви: " + userInfo.Rights);
-                return;
-            }
-            if (booksGridView.SelectedRows.Count == 0)
-            {
-                MessageBox.Show("Select a book to check availability.");
-                return;
-            }
-            bool isBookAvailable = Convert.ToBoolean(booksGridView.SelectedRows[0].Cells["Availability"].Value);
-            if (!isBookAvailable)
-            {
-                MessageBox.Show("This book is currently unavailable.");
+                MessageBox.Show("Тільки бібліотекарі та адміністратори можуть брати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
-            string bookTitle = booksGridView.SelectedRows[0].Cells["Title"].Value.ToString();
-            if (takeBookForm is not null)
+            if (booksGridView.SelectedRows.Count == 0)
             {
-                takeBookForm.Close();
+                MessageBox.Show("Оберіть книгу для взяття.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
+
+            bool isBookAvailable = Convert.ToBoolean(booksGridView.SelectedRows[0].Cells["Availability"].Value);
+            if (!isBookAvailable)
+            {
+                MessageBox.Show("Ця книга наразі недоступна.", "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["id"].Value);
+            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value.ToString() ?? "";
+
+            takeBookForm?.Close();
             takeBookForm = new TakeBookForm(dbConnection, bookId, bookTitle, this);
             takeBookForm.Show();
         }
@@ -168,23 +160,22 @@ namespace LibraryTeamWinFormApp
         {
             if (booksGridView.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Select a book to delete.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Оберіть книгу для видалення.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             var selectedRow = booksGridView.SelectedRows[0];
             int bookId = Convert.ToInt32(selectedRow.Cells["id"].Value);
-            string bookTitle = selectedRow.Cells["title"].Value.ToString();
+            string bookTitle = selectedRow.Cells["title"].Value.ToString() ?? "";
 
             var confirm = MessageBox.Show(
-                $"Are you sure you want to delete the book:\n\n'{bookTitle}' (ID: {bookId})?",
-                "Confirm Deletion",
+                $"Ви впевнені, що хочете видалити книгу:\n\n'{bookTitle}' (ID: {bookId})?",
+                "Підтвердження видалення",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );
 
-            if (confirm != DialogResult.Yes)
-                return;
+            if (confirm != DialogResult.Yes) return;
 
             try
             {
@@ -196,20 +187,16 @@ namespace LibraryTeamWinFormApp
 
                     if (rowsAffected > 0)
                     {
-                        MessageBox.Show($"Book '{bookTitle}' (ID: {bookId}) deleted successfully.",
-                            "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Книга '{bookTitle}' (ID: {bookId}) успішно видалена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         LoadBooks(userInfo.Rights);
                     }
                     else
-                    {
-                        MessageBox.Show($"No book found with ID {bookId}.",
-                            "Not Found", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
+                        MessageBox.Show($"Книгу з ID {bookId} не знайдено.", "Не знайдено", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error deleting book: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Помилка видалення книги: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -217,22 +204,22 @@ namespace LibraryTeamWinFormApp
         {
             if (booksGridView.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Select a book to return.");
+                MessageBox.Show("Оберіть книгу для повернення.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
             bool isBookAvailable = Convert.ToBoolean(booksGridView.SelectedRows[0].Cells["Availability"].Value);
             if (isBookAvailable)
             {
-                MessageBox.Show("This book is not currently taken.");
+                MessageBox.Show("Ця книга наразі не взята.", "Інформація", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
-            string bookTitle = booksGridView.SelectedRows[0].Cells["Title"].Value.ToString();
-            string login = String.Empty;
+            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["id"].Value);
+            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value.ToString() ?? "";
             int fk_usertakedbook_id = -1;
             DateTime dateToPut = new DateTime();
+            string login = "";
 
             try
             {
@@ -244,7 +231,7 @@ namespace LibraryTeamWinFormApp
                     {
                         if (!reader.Read())
                         {
-                            MessageBox.Show($"Book with ID {bookId} not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"Книга з ID {bookId} не знайдена.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
 
@@ -252,74 +239,59 @@ namespace LibraryTeamWinFormApp
                         dateToPut = Convert.ToDateTime(reader["puttodate"]);
                     }
                 }
+
+                string queryUser = "SELECT name FROM users WHERE id = @id";
+                using (var cmd = new NpgsqlCommand(queryUser, dbConnection))
+                {
+                    cmd.Parameters.AddWithValue("id", fk_usertakedbook_id);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                            login = reader["name"].ToString() ?? "";
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error searching user id taked book: " + ex.Message);
+                MessageBox.Show("Помилка повернення книги: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            bool isBookOverdue = DateTime.Now.Date > dateToPut.Date;
+            string bookOverdue = isBookOverdue ? "З запізненням." : "Без запізнення.";
+
+            bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
+                $"Дані правильні?\n Користувач: {login} (ID: {fk_usertakedbook_id})\n Повернення книги: \n ID {bookId} : {bookTitle} \n {bookOverdue}",
+                Microsoft.VisualBasic.MsgBoxStyle.YesNo,
+                "Підтвердження бібліотекаря"
+            ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
+
+            if (!isLibrarianApproved)
+            {
+                MessageBox.Show("Потрібне підтвердження бібліотекаря для повернення книги.", "Підтвердження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
             try
             {
-                string query = "SELECT name FROM users WHERE id = @id";
-                using (var cmd = new NpgsqlCommand(query, dbConnection))
+                string sql = "UPDATE books SET putToDate = NULL, takedDate = NULL, fk_usertakedbook_id = NULL WHERE id = @id";
+                using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
-                    cmd.Parameters.AddWithValue("id", fk_usertakedbook_id);
+                    cmd.Parameters.AddWithValue("id", bookId);
+                    int rowsAffected = cmd.ExecuteNonQuery();
 
-                    using (var reader = cmd.ExecuteReader())
+                    if (rowsAffected > 0)
                     {
-                        if (!reader.Read())
-                        {
-                            MessageBox.Show($"User with ID {fk_usertakedbook_id} not found.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-
-                        login = reader["name"].ToString();
+                        MessageBox.Show($"Книга ID {bookId} успішно повернена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        LoadBooks(userInfo.Rights);
                     }
+                    else
+                        MessageBox.Show($"Книга з ID {bookId} не знайдена.", "Не знайдено", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error returning book: " + ex.Message);
-            }
-
-            string bookOverdue = String.Empty;
-            bool isBookOverdue = DateTime.Now.Date > dateToPut.Date;
-            bookOverdue = isBookOverdue ? "Iз запiзненням." : "Без запiзнення.";
-
-            bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
-                            $"Is data correct?\n User login: {login} with ID: {fk_usertakedbook_id}\n Returning book: \n ID {bookId} : {bookTitle} \n {bookOverdue}",
-                            Microsoft.VisualBasic.MsgBoxStyle.YesNo,
-                            "Librarian Approval"
-                        ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
-
-            if (isLibrarianApproved)
-            {
-                try
-                {
-                    string sql = "UPDATE books SET putToDate = NULL, takedDate = NULL, fk_usertakedbook_id = NULL WHERE id = @id";
-                    using (var cmd = new NpgsqlCommand(sql, dbConnection))
-                    {
-                        cmd.Parameters.AddWithValue("id", bookId);
-                        int rowsAffected = cmd.ExecuteNonQuery();
-                        if (rowsAffected > 0)
-                        {
-                            MessageBox.Show($"Book ID {bookId} returned successfully.");
-                            LoadBooks(userInfo.Rights);
-                        }
-                        else
-                        {
-                            MessageBox.Show($"No book found with ID {bookId}.");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error returning book: " + ex.Message);
-                }
-            }
-            else
-            {
-                MessageBox.Show("Librarian approval is required to return a book.", "Approval Needed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Помилка повернення книги: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -327,32 +299,26 @@ namespace LibraryTeamWinFormApp
         {
             if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
             {
-                MessageBox.Show("Тiльки бібліотекарi та адміністратори можуть додати книги. Ви " + userInfo.Rights);
+                MessageBox.Show("Тільки бібліотекарі та адміністратори можуть додавати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            if (AddNewBookInLibrary is not null)
-            {
-                AddNewBookInLibrary.Close();
-            }
-
-            AddNewBookInLibrary = new AddNewBookInLibrary(dbConnection, this);
-            AddNewBookInLibrary.Show();
+            addNewBookForm?.Close();
+            addNewBookForm = new AddNewBookInLibrary(dbConnection, this);
+            addNewBookForm.Show();
         }
 
         private void EditSelectedBookButton_Click(object sender, EventArgs e)
         {
             if (booksGridView.SelectedRows.Count == 0)
             {
-                MessageBox.Show("Select a book to check availability.");
+                MessageBox.Show("Оберіть книгу для редагування.", "Попередження", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["ID"].Value);
 
-            if (editBookForm is not null)
-            {
-                editBookForm.Close();
-            }
+            int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["id"].Value);
+
+            editBookForm?.Close();
             editBookForm = new EditBookForm(dbConnection, bookId, this);
             editBookForm.Show();
         }
@@ -362,16 +328,16 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string query = @"
-            SELECT 
-                b.id, 
-                b.title, 
-                u.name AS borrower,
-                b.takeddate AS ""Taken Date"",
-                b.puttodate AS ""Return Date""
-            FROM books b
-            JOIN users u ON b.fk_usertakedbook_id = u.id
-            WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL
-            ORDER BY b.puttodate ASC;";
+                    SELECT 
+                        b.id, 
+                        b.title, 
+                        u.name AS borrower,
+                        b.takeddate AS ""Taken Date"",
+                        b.puttodate AS ""Return Date""
+                    FROM books b
+                    JOIN users u ON b.fk_usertakedbook_id = u.id
+                    WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL
+                    ORDER BY b.puttodate ASC;";
 
                 using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
                 {
@@ -381,23 +347,79 @@ namespace LibraryTeamWinFormApp
                 }
 
                 booksGridView.Columns["id"].HeaderText = "ID";
-                booksGridView.Columns["title"].HeaderText = "Book Title";
-                booksGridView.Columns["borrower"].HeaderText = "Borrower";
-                booksGridView.Columns["Taken Date"].HeaderText = "Taken";
-                booksGridView.Columns["Return Date"].HeaderText = "Return Until";
-
+                booksGridView.Columns["title"].HeaderText = "Назва книги";
+                booksGridView.Columns["borrower"].HeaderText = "Користувач";
+                booksGridView.Columns["Taken Date"].HeaderText = "Дата взяття";
+                booksGridView.Columns["Return Date"].HeaderText = "Дата повернення";
                 booksGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 booksGridView.ReadOnly = true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error loading overdue books: " + ex.Message);
+                MessageBox.Show("Помилка завантаження прострочених книг: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ApplyColorsAndAlignment()
+        {
+            this.BackColor = ColorTranslator.FromHtml("#E8DCC8");
+
+            Color labelColor = ColorTranslator.FromHtml("#3A2A20");
+
+            Label[] labels = { FindLabel, label1, label2, label3 };
+            foreach (var lbl in labels)
+            {
+                lbl.ForeColor = labelColor;
+                lbl.BackColor = Color.Transparent;
+                lbl.TextAlign = ContentAlignment.MiddleCenter;
+            }
+
+            booksGridView.BackgroundColor = ColorTranslator.FromHtml("#F7F2E8");
+            booksGridView.DefaultCellStyle.BackColor = ColorTranslator.FromHtml("#F7F2E8");
+            booksGridView.DefaultCellStyle.ForeColor = labelColor;
+            booksGridView.ColumnHeadersDefaultCellStyle.BackColor = ColorTranslator.FromHtml("#3F2727");
+            booksGridView.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
+            booksGridView.EnableHeadersVisualStyles = false;
+
+            Color buttonBase = ColorTranslator.FromHtml("#3F2727");
+            Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
+            Button[] buttons = { AdminPanelButton, TakeBookButton, ReturnBookButton, AddNewBookButton,
+                                 DeleteSelectedBook, EditSelectedBookButton, ShowOverdueBooksButton, ShowAllLibraryButton, FindBookByNameButton };
+
+            foreach (var btn in buttons)
+            {
+                btn.BackColor = buttonBase;
+                btn.ForeColor = Color.White;
+                btn.FlatStyle = FlatStyle.Flat;
+                btn.FlatAppearance.BorderSize = 0;
+                btn.Cursor = Cursors.Hand;
+                btn.MouseEnter += (s, e) => btn.BackColor = buttonHover;
+                btn.MouseLeave += (s, e) => btn.BackColor = buttonBase;
+            }
+
+            Color textBoxColor = ColorTranslator.FromHtml("#F7F2E8");
+            TextBox[] textBoxes = { FindBookByNameTextBox };
+            foreach (var tb in textBoxes)
+            {
+                tb.BackColor = textBoxColor;
+                tb.ForeColor = labelColor;
+                tb.TextAlign = HorizontalAlignment.Center;
+                Color activeColor = ColorTranslator.FromHtml("#FFF5D9");
+                tb.GotFocus += (s, e) => tb.BackColor = activeColor;
+                tb.LostFocus += (s, e) => tb.BackColor = textBoxColor;
             }
         }
 
         private void ShowAllLibraryButton_Click(object sender, EventArgs e)
         {
             UpdateBooksData();
+        }
+
+        public void Dispose()
+        {
+            dbConnection?.Close();
+            dbConnection?.Dispose();
+            Application.Exit();
         }
     }
 }
