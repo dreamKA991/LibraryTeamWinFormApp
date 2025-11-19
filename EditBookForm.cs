@@ -26,6 +26,7 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string query = "SELECT title, isbn FROM books WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(query, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("id", bookID);
@@ -60,6 +61,7 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string sql = "UPDATE books SET title = @title, isbn = @isbn WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("title", TitleBookTextBox.Text);
@@ -68,16 +70,15 @@ namespace LibraryTeamWinFormApp
 
                     int rowsAffected = cmd.ExecuteNonQuery();
 
-                    if (rowsAffected > 0)
-                    {
-                        MessageBox.Show("Книгу успішно оновлено!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        libraryForm.UpdateBooksData();
-                        this.Close();
-                    }
-                    else
+                    if (rowsAffected <= 0)
                     {
                         MessageBox.Show("Не вдалося оновити книгу.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
+
+                    MessageBox.Show("Книгу успішно оновлено!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    libraryForm.UpdateBooksData();
+                    this.Close();
                 }
             }
             catch (Exception ex)
@@ -88,10 +89,10 @@ namespace LibraryTeamWinFormApp
 
         private bool ValidateInputs()
         {
-            bool isValid = true;
-            if (!TitleBookTextBox.ValidateTextBox()) isValid = false;
-            if (!ISBNBookTextBox.ValidateTextBox()) isValid = false;
-            return isValid;
+            if (!TitleBookTextBox.ValidateTextBox() || !ISBNBookTextBox.ValidateTextBox())
+                return false;
+
+            return true;
         }
 
         private void ApplyColorsAndAlignment()
@@ -123,9 +124,7 @@ namespace LibraryTeamWinFormApp
             Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
 
             // Кнопки: "Оновити" та "Скасувати"
-             Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null
-    ? new[] { SetButton, cancelBtn }
-    : new[] { SetButton };
+             Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null ? new[] { SetButton, cancelBtn } : new[] { SetButton };
             foreach (var btn in buttons)
             {
                 btn.BackColor = buttonBase;

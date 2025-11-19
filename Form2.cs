@@ -34,50 +34,49 @@ namespace LibraryTeamWinFormApp
 
         private void RegisterButton_Click(object sender, EventArgs e)
         {
-            if (!ValidateInputs()) return;
+            if (!ValidateInputs()) 
+                return;
+
             RegisterNewUser();
         }
 
+        // TODO: Cleanup all
         private void RegisterForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            // дії при закритті форми
+         
         }
 
         private bool ValidateInputs()
         {
-            bool isValid = true;
+            LoginTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
+            PasswordTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
+            comboBoxRights.BackColor = ColorTranslator.FromHtml("#F7F2E8");
 
             if (string.IsNullOrWhiteSpace(LoginTextBox.Text))
             {
                 LoginTextBox.BackColor = Color.Red;
-                isValid = false;
+                return false;
             }
-            else
-                LoginTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
 
             if (string.IsNullOrWhiteSpace(PasswordTextBox.Text))
             {
                 PasswordTextBox.BackColor = Color.Red;
-                isValid = false;
+                return false;
             }
-            else
-                PasswordTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
 
             if (comboBoxRights.SelectedItem == null)
             {
                 comboBoxRights.BackColor = Color.Red;
-                isValid = false;
+                return false;
             }
-            else
-                comboBoxRights.BackColor = ColorTranslator.FromHtml("#F7F2E8");
 
             if (NpgsqlExtensions.IsLoginExistsInDataBase(_dbConnection, LoginTextBox.Text.Trim()))
             {
                 MessageBox.Show("Користувач з таким логіном вже існує.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                isValid = false;
+                return false;
             }
 
-            return isValid;
+            return true;
         }
 
         private void RegisterNewUser()
@@ -135,16 +134,6 @@ namespace LibraryTeamWinFormApp
             {
                 ctrl.Left = (this.ClientSize.Width - ctrl.Width) / 2;
             }
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void comboBoxRights_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
         }
     }
 

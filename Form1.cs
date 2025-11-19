@@ -7,7 +7,7 @@ namespace LibraryTeamWinFormApp
 {
     public partial class StartForm : Form
     {
-        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=739809;Database=LibraryDataBase";
+        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=1;Database=test";
         RegisterForm? registrationForm = null;
         LibraryForm? libraryForm = null;
         NpgsqlConnection? DBConnection = null;
@@ -27,18 +27,17 @@ namespace LibraryTeamWinFormApp
 
         private void onRegisterButton_Click(object sender, EventArgs e)
         {
-            if (!ValidateInputs()) return;
+            if (!ValidateConnectionToDataBase())
+                return;
+
+            if (!ValidateInputs()) 
+                return;
+
             TryLogin();
         }
 
         private bool TryLogin()
         {
-            if (DBConnection == null)
-            {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
             libraryForm?.Close();
 
             string login = LoginTextBox.Text.Trim();
@@ -55,13 +54,17 @@ namespace LibraryTeamWinFormApp
 
                     using (var reader = cmd.ExecuteReader())
                     {
-                        if (reader.Read())
+                        if (!reader.Read())
                         {
-                            string rights = reader["rights"]?.ToString() ?? string.Empty;
-                            int id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : -1;
+                            MessageBox.Show("Невірний логін або пароль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return false;
+                        }
 
-                            // Переклад прав на українську
-                            string rightsUA = rights switch
+                        string rights = reader["rights"]?.ToString() ?? string.Empty;
+                        int id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : -1;
+
+                        // Переклад прав на українську
+                        string rightsUA = rights switch
                             {
                                 "reader" => "читач",
                                 "librarian" => "бібліотекар",
@@ -69,12 +72,11 @@ namespace LibraryTeamWinFormApp
                                 _ => rights
                             };
 
-                            MessageBox.Show($"Ласкаво просимо, {login}! Ваша роль: {rightsUA}",
-                                "Успішний вхід", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show($"Ласкаво просимо, {login}! Ваша роль: {rightsUA}", "Успішний вхід", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                            reader.Close();
+                        reader.Close();
 
-                            UserInfo userInfo = new UserInfo
+                        UserInfo userInfo = new UserInfo
                             {
                                 Id = id,
                                 Name = login,
@@ -82,17 +84,11 @@ namespace LibraryTeamWinFormApp
                                 Rights = rightsUA
                             };
 
-                            libraryForm = new LibraryForm(DBConnection, userInfo);
-                            libraryForm.Show();
-                            registrationForm?.Close();
-                            this.Hide();
-                            return true;
-                        }
-                        else
-                        {
-                            MessageBox.Show("Невірний логін або пароль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return false;
-                        }
+                        libraryForm = new LibraryForm(DBConnection, userInfo);
+                        libraryForm.Show();
+                        registrationForm?.Close();
+                        this.Hide();
+                        return true;
                     }
                 }
             }
@@ -105,10 +101,21 @@ namespace LibraryTeamWinFormApp
 
         private bool ValidateInputs()
         {
-            bool isValid = true;
-            if (!LoginTextBox.ValidateTextBox()) isValid = false;
-            if (!PasswordTextBox.ValidateTextBox()) isValid = false;
-            return isValid;
+            if (!LoginTextBox.ValidateTextBox() || !PasswordTextBox.ValidateTextBox())
+                return false;
+
+            return true;
+        }
+
+        private bool ValidateConnectionToDataBase()
+        {
+            if (DBConnection == null)
+            {
+                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            return true;
         }
 
         private void ConnectToDB()
@@ -132,11 +139,8 @@ namespace LibraryTeamWinFormApp
         {
             registrationForm?.Close();
 
-            if (DBConnection == null)
-            {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            if (!ValidateConnectionToDataBase())
                 return;
-            }
 
             registrationForm = new RegisterForm(DBConnection, onNewUserRegistered);
             registrationForm.Show();
@@ -198,11 +202,6 @@ namespace LibraryTeamWinFormApp
 
             Button[] buttons = { SignInButton, AddUserButton };
             foreach (var btn in buttons) btn.Left = (this.ClientSize.Width - btn.Width) / 2;
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
-
         }
     }
 
