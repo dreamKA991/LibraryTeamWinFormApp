@@ -49,7 +49,6 @@
             comboBoxRights.Size = new Size(122, 28);
             comboBoxRights.TabIndex = 23;
             comboBoxRights.Text = "Виберіть роль";
-            comboBoxRights.SelectedIndexChanged += comboBoxRights_SelectedIndexChanged;
             // 
             // label2
             // 
@@ -60,7 +59,6 @@
             label2.Size = new Size(51, 20);
             label2.TabIndex = 22;
             label2.Text = "РОЛЬ:";
-            label2.Click += label2_Click;
             // 
             // label1
             // 
@@ -112,7 +110,6 @@
             PasswordTextBox.Size = new Size(158, 25);
             PasswordTextBox.TabIndex = 17;
             PasswordTextBox.TextAlign = HorizontalAlignment.Center;
-            PasswordTextBox.TextChanged += PasswordTextBox_TextChanged;
             // 
             // LoginTextBox
             // 

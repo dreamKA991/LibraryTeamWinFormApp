@@ -7,13 +7,13 @@ namespace LibraryTeamWinFormApp
 {
     public partial class UserSettings : Form
     {
-        private NpgsqlConnection? dbConnection;
+        private NpgsqlConnection? DBConnection;
         private UserInfo selectedUserInfo, signedUserInfo;
 
         public UserSettings(NpgsqlConnection? dbConnection, UserInfo selectedUserInfo, UserInfo signedUserInfo)
         {
             InitializeComponent();
-            this.dbConnection = dbConnection;
+            this.DBConnection = dbConnection;
             this.selectedUserInfo = selectedUserInfo;
             this.signedUserInfo = signedUserInfo;
 
@@ -90,7 +90,7 @@ namespace LibraryTeamWinFormApp
 
         private void SetUpButton_Click(object sender, EventArgs e)
         {
-            if (dbConnection == null)
+            if (DBConnection == null)
             {
                 MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -108,7 +108,7 @@ namespace LibraryTeamWinFormApp
 
             if (!string.Equals(selectedUserInfo.Name, newLogin, StringComparison.OrdinalIgnoreCase))
             {
-                if (NpgsqlExtensions.IsLoginExistsInDataBase(dbConnection, newLogin))
+                if (NpgsqlExtensions.IsLoginExistsInDataBase(DBConnection, newLogin))
                 {
                     MessageBox.Show("Користувач з таким логіном вже існує.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
@@ -130,7 +130,7 @@ namespace LibraryTeamWinFormApp
                     ? "UPDATE users SET name = @name, password = @password, rights = @rights WHERE id = @id"
                     : "UPDATE users SET name = @name, rights = @rights WHERE id = @id";
 
-                using var cmd = new NpgsqlCommand(sql, dbConnection);
+                using var cmd = new NpgsqlCommand(sql, DBConnection);
                 cmd.Parameters.AddWithValue("name", newLogin);
                 if (isPasswordNeedToBeChanged)
                     cmd.Parameters.AddWithValue("password", newPassword);
@@ -138,24 +138,20 @@ namespace LibraryTeamWinFormApp
                 cmd.Parameters.AddWithValue("id", selectedUserInfo.Id);
 
                 int rowsAffected = cmd.ExecuteNonQuery();
-                if (rowsAffected > 0)
-                {
-                    MessageBox.Show("Зміни успішно збережено!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.Close();
-                }
-                else
+
+                if (rowsAffected <= 0)
                 {
                     MessageBox.Show("Не вдалося оновити дані. Перевірте ID користувача.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+  
+                MessageBox.Show("Зміни успішно збережено!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                this.Close();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Помилка при оновленні користувача:\n{ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
-        private void comboBoxRights_SelectedIndexChanged(object sender, EventArgs e) { }
-        private void PasswordTextBox_TextChanged(object sender, EventArgs e) { }
-        private void label2_Click(object sender, EventArgs e) { }
     }
 }

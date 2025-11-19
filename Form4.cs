@@ -29,6 +29,12 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
+            if (DBConnection == null)
+            {
+                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             this.Text = $"Панель адміністратора - {userInfo.Name} ({userInfo.Rights})";
             ApplyColorsAndAlignment();
             CenterControls();
@@ -37,12 +43,6 @@ namespace LibraryTeamWinFormApp
 
         private void LoadUsers()
         {
-            if (DBConnection == null)
-            {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-
             try
             {
                 string query = "SELECT id, name AS login, rights FROM users ORDER BY id";
@@ -85,39 +85,41 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
-            if (DBConnection != null)
+            try
             {
-                try
+                string checkQuery = "SELECT COUNT(*) FROM books WHERE fk_usertakedbook_id = @id";
+
+                using (var checkCmd = new NpgsqlCommand(checkQuery, DBConnection))
                 {
-                    string checkQuery = "SELECT COUNT(*) FROM books WHERE fk_usertakedbook_id = @id";
-                    using (var checkCmd = new NpgsqlCommand(checkQuery, DBConnection))
+                    checkCmd.Parameters.AddWithValue("@id", userId);
+                    object? result = checkCmd.ExecuteScalar();
+                    int takenCount = result != null ? Convert.ToInt32(result) : 0;
+
+                    if (takenCount > 0)
                     {
-                        checkCmd.Parameters.AddWithValue("@id", userId);
-                        object? result = checkCmd.ExecuteScalar();
-                        int takenCount = result != null ? Convert.ToInt32(result) : 0;
-                        if (takenCount > 0)
-                        {
-                            MessageBox.Show($"Користувач '{login}' має {takenCount} взяту/взятих книгу(и). Поверніть книги перед видаленням.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
+                        MessageBox.Show($"Користувач '{login}' має {takenCount} взяту/взятих книгу(и). Поверніть книги перед видаленням.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Помилка перевірки книг користувача: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Помилка перевірки книг користувача: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             var confirm = MessageBox.Show($"Видалити користувача '{login}'?", "Підтвердження", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm == DialogResult.Yes && DBConnection != null)
+
+            if (confirm == DialogResult.Yes)
             {
                 string query = "DELETE FROM users WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(query, DBConnection))
                 {
                     cmd.Parameters.AddWithValue("@id", userId);
                     cmd.ExecuteNonQuery();                                              
                 }
+
                 LoadUsers();
             }
         }
