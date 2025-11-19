@@ -34,7 +34,8 @@ namespace LibraryTeamWinFormApp
 
             foreach (char c in text)
             {
-                if (char.IsLetter(c)) return true;
+                if (char.IsLetter(c)) 
+                    return true;
             }
 
             return false;
