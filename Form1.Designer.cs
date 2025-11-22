@@ -64,7 +64,6 @@
             label2.Size = new Size(153, 20);
             label2.TabIndex = 2;
             label2.Text = "Підключення до БД:";
-            label2.Click += label2_Click;
             // 
             // PasswordTextBox
             // 

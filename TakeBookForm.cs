@@ -1,6 +1,7 @@
 ﻿using Npgsql;
 using System;
 using System.Data;
+using System.Data.Common;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -8,7 +9,7 @@ namespace LibraryTeamWinFormApp
 {
     public partial class TakeBookForm : Form
     {
-        NpgsqlConnection? dbConnection = null;
+        NpgsqlConnection? DBConnection = null;
         LibraryForm mainForm = null;
         int bookID;
         string bookTitle;
@@ -19,7 +20,7 @@ namespace LibraryTeamWinFormApp
         public TakeBookForm(NpgsqlConnection? dbConnection, int bookID, string bookTitle, LibraryForm mainForm)
         {
             InitializeComponent();
-            this.dbConnection = dbConnection;
+            this.DBConnection = dbConnection;
             this.bookID = bookID;
             this.bookTitle = bookTitle;
             this.mainForm = mainForm;
@@ -61,12 +62,17 @@ namespace LibraryTeamWinFormApp
 
         private void PopulateUsersCombo()
         {
-            if (dbConnection == null) return;
+            if (DBConnection == null)
+            {
+                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             try
             {
                 string query = "SELECT id, name FROM users ORDER BY id";
-                using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
+
+                using (var adapter = new NpgsqlDataAdapter(query, DBConnection))
                 {
                     var table = new DataTable();
                     adapter.Fill(table);
@@ -76,6 +82,7 @@ namespace LibraryTeamWinFormApp
                         comboBoxUserIds.DataSource = table;
                         comboBoxUserIds.DisplayMember = "id";    
                         comboBoxUserIds.ValueMember = "id";
+
                         if (comboBoxUserIds.Items.Count > 0)
                         {
                             comboBoxUserIds.SelectedIndex = 0;
@@ -142,7 +149,8 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string query = "SELECT name FROM users WHERE id = @id";
-                using (var cmd = new NpgsqlCommand(query, dbConnection))
+
+                using (var cmd = new NpgsqlCommand(query, DBConnection))
                 {
                     cmd.Parameters.AddWithValue("id", userId);
 
@@ -179,23 +187,23 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string sql = "UPDATE books SET putToDate=@putToDate, takedDate=@takedDate, fk_usertakedbook_id=@fk_usertakedbook_id WHERE id=@bookId";
-                using (var cmd = new NpgsqlCommand(sql, dbConnection))
+
+                using (var cmd = new NpgsqlCommand(sql, DBConnection))
                 {
                     cmd.Parameters.AddWithValue("putToDate", parsedDateToPut);
                     cmd.Parameters.AddWithValue("takedDate", parsedDateNow);
                     cmd.Parameters.AddWithValue("fk_usertakedbook_id", userId);
                     cmd.Parameters.AddWithValue("bookId", bookID);
+
                     int rows = cmd.ExecuteNonQuery();
 
-                    if (rows > 0)
-                    {
-                        MessageBox.Show($"Успішно!\nКористувач: {login}\nДата повернення: {dateOnly}", "Підтвердження", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        this.Close();
-                    }
-                    else
+                    if (rows <= 0)
                     {
                         MessageBox.Show("Не вдалося оновити дані.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+
+                    MessageBox.Show($"Успішно!\nКористувач: {login}\nДата повернення: {dateOnly}", "Підтвердження", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    this.Close();
                 }
             }
             catch (Exception ex)
@@ -276,14 +284,6 @@ namespace LibraryTeamWinFormApp
                     selectedLoginLabel.Left = cb.Right + 10;
                 }
             }
-        }
-
-        private void returnDatePicker_ValueChanged(object sender, EventArgs e)
-        {
-        }
-
-        private void numericUpDown1_ValueChanged(object sender, EventArgs e)
-        {
         }
     }
 }

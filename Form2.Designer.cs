@@ -108,7 +108,6 @@
             label2.Size = new Size(51, 20);
             label2.TabIndex = 14;
             label2.Text = "РОЛЬ:";
-            label2.Click += label2_Click;
             // 
             // comboBoxRights
             // 
@@ -121,7 +120,6 @@
             comboBoxRights.Size = new Size(122, 28);
             comboBoxRights.TabIndex = 15;
             comboBoxRights.Text = "Вибрати роль";
-            comboBoxRights.SelectedIndexChanged += comboBoxRights_SelectedIndexChanged;
             // 
             // RegisterForm
             // 

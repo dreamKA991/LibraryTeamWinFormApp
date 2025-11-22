@@ -67,7 +67,6 @@
             returnDatePicker.Name = "returnDatePicker";
             returnDatePicker.Size = new Size(228, 29);
             returnDatePicker.TabIndex = 3;
-            returnDatePicker.ValueChanged += returnDatePicker_ValueChanged;
             // 
             // label2
             // 
@@ -90,7 +89,6 @@
             numericUpDown1.Size = new Size(157, 29);
             numericUpDown1.TabIndex = 5;
             numericUpDown1.Value = new decimal(new int[] { 1, 0, 0, 0 });
-            numericUpDown1.ValueChanged += numericUpDown1_ValueChanged;
             // 
             // TakeBookForm
             // 

@@ -1,28 +1,39 @@
-﻿using System;
+﻿using Npgsql;
+using System;
 using System.Data;
+using System.Data.Common;
 using System.Drawing;
 using System.Windows.Forms;
-using Npgsql;
 
 namespace LibraryTeamWinFormApp
 {
     public partial class AdminPanel : Form
     {
         private UserInfo userInfo;
-        private NpgsqlConnection? dbConnection;
+        private NpgsqlConnection? DBConnection;
         private UserSettings? userSettingsForm = null;
 
         public AdminPanel(NpgsqlConnection? dbConnection, UserInfo userInfo)
         {
             InitializeComponent();
-            this.dbConnection = dbConnection;
+            this.DBConnection = dbConnection;
             this.userInfo = userInfo;
             this.Load += AdminPanel_Load;
         }
 
         private void AdminPanel_Load(object? sender, EventArgs e)
         {
-            if (userInfo == null) return;
+            if (userInfo == null)
+            {
+                MessageBox.Show("Немає інформації про користувача!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (DBConnection == null)
+            {
+                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
 
             this.Text = $"Панель адміністратора - {userInfo.Name} ({userInfo.Rights})";
             ApplyColorsAndAlignment();
@@ -32,12 +43,11 @@ namespace LibraryTeamWinFormApp
 
         private void LoadUsers()
         {
-            if (dbConnection == null) return;
-
             try
             {
                 string query = "SELECT id, name AS login, rights FROM users ORDER BY id";
-                using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
+
+                using (var adapter = new NpgsqlDataAdapter(query, DBConnection))
                 {
                     var table = new DataTable();
                     adapter.Fill(table);
@@ -75,39 +85,41 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
-            if (dbConnection != null)
+            try
             {
-                try
+                string checkQuery = "SELECT COUNT(*) FROM books WHERE fk_usertakedbook_id = @id";
+
+                using (var checkCmd = new NpgsqlCommand(checkQuery, DBConnection))
                 {
-                    string checkQuery = "SELECT COUNT(*) FROM books WHERE fk_usertakedbook_id = @id";
-                    using (var checkCmd = new NpgsqlCommand(checkQuery, dbConnection))
+                    checkCmd.Parameters.AddWithValue("@id", userId);
+                    object? result = checkCmd.ExecuteScalar();
+                    int takenCount = result != null ? Convert.ToInt32(result) : 0;
+
+                    if (takenCount > 0)
                     {
-                        checkCmd.Parameters.AddWithValue("@id", userId);
-                        object? result = checkCmd.ExecuteScalar();
-                        int takenCount = result != null ? Convert.ToInt32(result) : 0;
-                        if (takenCount > 0)
-                        {
-                            MessageBox.Show($"Користувач '{login}' має {takenCount} взяту/взятих книгу(и). Поверніть книги перед видаленням.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
+                        MessageBox.Show($"Користувач '{login}' має {takenCount} взяту/взятих книгу(и). Поверніть книги перед видаленням.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Помилка перевірки книг користувача: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Помилка перевірки книг користувача: " + ex.Message, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
             var confirm = MessageBox.Show($"Видалити користувача '{login}'?", "Підтвердження", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (confirm == DialogResult.Yes && dbConnection != null)
+
+            if (confirm == DialogResult.Yes)
             {
                 string query = "DELETE FROM users WHERE id = @id";
-                using (var cmd = new NpgsqlCommand(query, dbConnection))
+
+                using (var cmd = new NpgsqlCommand(query, DBConnection))
                 {
                     cmd.Parameters.AddWithValue("@id", userId);
                     cmd.ExecuteNonQuery();                                              
                 }
+
                 LoadUsers();
             }
         }
@@ -132,7 +144,7 @@ namespace LibraryTeamWinFormApp
 
             userSettingsForm?.Close();
 
-            userSettingsForm = new UserSettings(dbConnection, new UserInfo
+            userSettingsForm = new UserSettings(DBConnection, new UserInfo
             {
                 Id = userId,
                 Name = oldLogin,

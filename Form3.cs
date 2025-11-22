@@ -3,6 +3,7 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace LibraryTeamWinFormApp
@@ -37,26 +38,41 @@ namespace LibraryTeamWinFormApp
 
         private void LoadBooks(string rights)
         {
+            bool isReader = rights == "читач";
+            bool isLibrarian = rights == "бібліотекар";
+            bool isAdmin = rights == "адміністратор";
+
             try
             {
                 string query;
-                if (rights != "читач")
+
+                if (!isReader)
                 {
-                    label1.Visible = TakeBookButton.Visible = ReturnBookButton.Visible = AddNewBookButton.Visible = EditSelectedBookButton.Visible = DeleteSelectedBook.Visible =
-                        ShowOverdueBooksButton.Visible = ShowAllLibraryButton.Visible = label2.Visible = true;
-                   
+                    label1.Visible =
+                    TakeBookButton.Visible =
+                    ReturnBookButton.Visible =
+                    AddNewBookButton.Visible =
+                    EditSelectedBookButton.Visible =
+                    DeleteSelectedBook.Visible =
+                    ShowOverdueBooksButton.Visible =
+                    ShowAllLibraryButton.Visible =
+                    label2.Visible = true;
                 }
-                if (rights == "адміністратор")
+
+                if (isAdmin)
                 {
-                    AdminPanelButton.Visible = label3.Visible = true;
+                    AdminPanelButton.Visible = true;
+                    label3.Visible = true;
                 }
-                if (rights == "читач")
+
+                if (isReader)
                 {
                     query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability FROM books ORDER BY id";
+
                     this.Width = 600;
                     booksGridView.Width = 490;
                 }
-                else if (rights == "бібліотекар" || rights == "адміністратор")
+                else if (isLibrarian || isAdmin)
                 {
                     query = @"SELECT id, title, CASE WHEN fk_usertakedbook_id IS NULL THEN true ELSE false END AS Availability, takeddate, puttodate FROM books ORDER BY id";
                 }
@@ -65,6 +81,7 @@ namespace LibraryTeamWinFormApp
                     MessageBox.Show("Невідомі права користувача.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+
 
                 using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
                 {
@@ -78,7 +95,7 @@ namespace LibraryTeamWinFormApp
                 booksGridView.Columns["title"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
                 booksGridView.Columns["availability"].HeaderText = "Доступність";
 
-                if (rights != "читач")
+                if (!isReader)
                 {
                     booksGridView.Columns["takeddate"].HeaderText = "Дата взяття";
                     booksGridView.Columns["puttodate"].HeaderText = "Дата повернення";
@@ -117,19 +134,16 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
-            var filteredRows = cachedDataTable.AsEnumerable()
-                .Where(row => row.Field<string>("title").ToLower().Contains(name));
+            var filteredRows = cachedDataTable.AsEnumerable().Where(row => row.Field<string>("title").ToLower().Contains(name));
 
-            DataTable filteredTable = filteredRows.Any()
-                ? filteredRows.CopyToDataTable()
-                : cachedDataTable.Clone();
+            DataTable filteredTable = filteredRows.Any() ? filteredRows.CopyToDataTable() : cachedDataTable.Clone();
 
             booksGridView.DataSource = filteredTable;
         }
 
         private void TakeBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
+            if (userInfo.Rights == "читач")
             {
                 MessageBox.Show("Тільки бібліотекарі та адміністратори можуть брати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -168,30 +182,32 @@ namespace LibraryTeamWinFormApp
             int bookId = Convert.ToInt32(selectedRow.Cells["id"].Value);
             string bookTitle = selectedRow.Cells["title"].Value.ToString() ?? "";
 
-            var confirm = MessageBox.Show(
-                $"Ви впевнені, що хочете видалити книгу:\n\n'{bookTitle}' (ID: {bookId})?",
-                "Підтвердження видалення",
+            var confirm = MessageBox.Show($"Ви впевнені, що хочете видалити книгу:\n\n'{bookTitle}' (ID: {bookId})?", "Підтвердження видалення",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );
 
-            if (confirm != DialogResult.Yes) return;
+            if (confirm != DialogResult.Yes)
+                return;
 
             try
             {
                 string sql = "DELETE FROM books WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("id", bookId);
+
                     int rowsAffected = cmd.ExecuteNonQuery();
 
-                    if (rowsAffected > 0)
+                    if (rowsAffected <= 0)
                     {
-                        MessageBox.Show($"Книга '{bookTitle}' (ID: {bookId}) успішно видалена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadBooks(userInfo.Rights);
-                    }
-                    else
                         MessageBox.Show($"Книгу з ID {bookId} не знайдено.", "Не знайдено", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    MessageBox.Show($"Книга '{bookTitle}' (ID: {bookId}) успішно видалена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadBooks(userInfo.Rights);
                 }
             }
             catch (Exception ex)
@@ -223,10 +239,12 @@ namespace LibraryTeamWinFormApp
 
             try
             {
-                string query = "SELECT puttodate,fk_usertakedbook_id FROM books WHERE id = @bookId";
-                using (var cmd = new NpgsqlCommand(query, dbConnection))
+                string queryBookID = "SELECT puttodate,fk_usertakedbook_id FROM books WHERE id = @bookId";
+
+                using (var cmd = new NpgsqlCommand(queryBookID, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("bookId", bookId);
+
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (!reader.Read())
@@ -241,9 +259,11 @@ namespace LibraryTeamWinFormApp
                 }
 
                 string queryUser = "SELECT name FROM users WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(queryUser, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("id", fk_usertakedbook_id);
+
                     using (var reader = cmd.ExecuteReader())
                     {
                         if (reader.Read())
@@ -275,18 +295,20 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string sql = "UPDATE books SET putToDate = NULL, takedDate = NULL, fk_usertakedbook_id = NULL WHERE id = @id";
+
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("id", bookId);
                     int rowsAffected = cmd.ExecuteNonQuery();
 
-                    if (rowsAffected > 0)
+                    if (rowsAffected <= 0)
                     {
-                        MessageBox.Show($"Книга ID {bookId} успішно повернена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        LoadBooks(userInfo.Rights);
-                    }
-                    else
                         MessageBox.Show($"Книга з ID {bookId} не знайдена.", "Не знайдено", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    MessageBox.Show($"Книга ID {bookId} успішно повернена.", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    LoadBooks(userInfo.Rights);
                 }
             }
             catch (Exception ex)
@@ -297,7 +319,7 @@ namespace LibraryTeamWinFormApp
 
         private void AddNewBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights != "адміністратор" && userInfo.Rights != "бібліотекар")
+            if (userInfo.Rights == "читач")
             {
                 MessageBox.Show("Тільки бібліотекарі та адміністратори можуть додавати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -327,17 +349,8 @@ namespace LibraryTeamWinFormApp
         {
             try
             {
-                string query = @"
-                    SELECT 
-                        b.id, 
-                        b.title, 
-                        u.name AS borrower,
-                        b.takeddate AS ""Taken Date"",
-                        b.puttodate AS ""Return Date""
-                    FROM books b
-                    JOIN users u ON b.fk_usertakedbook_id = u.id
-                    WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL
-                    ORDER BY b.puttodate ASC;";
+                string query = @"SELECT b.id, b.title, u.name AS borrower, b.takeddate AS ""Taken Date"", b.puttodate AS ""Return Date""
+                    FROM books b JOIN users u ON b.fk_usertakedbook_id = u.id  WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL ORDER BY b.puttodate ASC;";
 
                 using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
                 {

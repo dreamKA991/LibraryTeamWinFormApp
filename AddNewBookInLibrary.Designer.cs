@@ -53,7 +53,6 @@
             label1.Size = new Size(114, 24);
             label1.TabIndex = 1;
             label1.Text = "Назва книги";
-            label1.Click += label1_Click;
             // 
             // label2
             // 

@@ -24,26 +24,21 @@ namespace LibraryTeamWinFormApp
 
         private void AddNewBookButton_Click(object sender, EventArgs e)
         {
-            bool isValid = true;
-
-            if (!TitleBookTextBox.ValidateTextBox()) isValid = false;
-            if (!ISBNBookTextBox.ValidateTextBox()) isValid = false;
+            if (!TitleBookTextBox.ValidateTextBox() || !ISBNBookTextBox.ValidateTextBox())
+                return;
 
             if (ISBNBookTextBox.IsHaveLiters() || ISBNBookTextBox.Text.Length > 32)
             {
-                isValid = false;
                 ISBNBookTextBox.BackColor = Color.LightCoral;
-            }
-            else
-            {
-                ISBNBookTextBox.BackColor = SystemColors.Window;
+                return;
             }
 
-            if (!isValid) return;
+            ISBNBookTextBox.BackColor = SystemColors.Window;
 
             try
             {
                 string sql = "INSERT INTO books (title, isbn) VALUES (@title, @isbn)";
+
                 using (var cmd = new NpgsqlCommand(sql, dbConnection))
                 {
                     cmd.Parameters.AddWithValue("title", TitleBookTextBox.Text);
@@ -51,16 +46,15 @@ namespace LibraryTeamWinFormApp
 
                     int rowsAffected = cmd.ExecuteNonQuery();
 
-                    if (rowsAffected > 0)
-                    {
-                        MessageBox.Show("Книгу успішно додано!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        libraryForm.UpdateBooksData();
-                        this.Close();
-                    }
-                    else
+                    if (rowsAffected <= 0)
                     {
                         MessageBox.Show("Не вдалося додати книгу.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
+
+                    MessageBox.Show("Книгу успішно додано!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    libraryForm.UpdateBooksData();
+                    this.Close();
                 }
             }
             catch (Exception ex)
@@ -98,9 +92,7 @@ namespace LibraryTeamWinFormApp
             Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
 
             // Кнопки: додати книгу та скасувати
-            Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null
-    ? new[] { AddNewBookButton, cancelBtn }
-    : new[] { AddNewBookButton };
+            Button[] buttons = CancelButton is Button cancelBtn && cancelBtn != null ? new[] { AddNewBookButton, cancelBtn } : new[] { AddNewBookButton };
             foreach (var btn in buttons)
             {
                 btn.BackColor = buttonBase;
@@ -112,11 +104,6 @@ namespace LibraryTeamWinFormApp
                 btn.MouseLeave += (s, e) => btn.BackColor = buttonBase;
                 btn.Left = (this.ClientSize.Width - btn.Width) / 2;
             }
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
-            // Можна залишити порожнім або додати підказку
         }
     }
 }
