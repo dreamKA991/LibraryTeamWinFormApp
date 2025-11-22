@@ -10,6 +10,16 @@ namespace LibraryTeamWinFormApp
         private readonly NpgsqlConnection _dbConnection;
         private readonly Action<string, string> _onNewUserRegistered;
 
+        const string BackgroundColor = "#E8DCC8";
+        const string labelColor = "#3A2A20";
+        const string BoxBackgroundColor = "#F7F2E8";
+        const string BoxHoverBackgroundColor = "#FFF5D9";
+        const string ButtonBackgroundColor = "#3F2727";
+        const string ButtonHoverBackgroundColor = "#5A3A3A";
+
+        string[] roles = { "читач", "бібліотекар", "адміністратор" };
+
+
         public RegisterForm(NpgsqlConnection dbConnection, Action<string, string> onNewUserRegistered)
         {
             InitializeComponent();
@@ -20,10 +30,9 @@ namespace LibraryTeamWinFormApp
             RegisterButton.Click += RegisterButton_Click;
             this.FormClosing += RegisterForm_FormClosing;
 
-            // Додаємо українські права користувачів
             comboBoxRights.Items.Clear();
-            comboBoxRights.Items.AddRange(new string[] { "читач", "бібліотекар", "адміністратор" });
-            comboBoxRights.SelectedIndex = 0; // за замовчуванням – читач
+            comboBoxRights.Items.AddRange(roles);
+            comboBoxRights.SelectedIndex = 0; 
         }
 
         private void RegisterForm_Load(object sender, EventArgs e)
@@ -40,7 +49,7 @@ namespace LibraryTeamWinFormApp
             RegisterNewUser();
         }
 
-        // TODO: Cleanup all
+        // TODO: Clean all
         private void RegisterForm_FormClosing(object sender, FormClosingEventArgs e)
         {
          
@@ -48,9 +57,11 @@ namespace LibraryTeamWinFormApp
 
         private bool ValidateInputs()
         {
-            LoginTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
-            PasswordTextBox.BackColor = ColorTranslator.FromHtml("#F7F2E8");
-            comboBoxRights.BackColor = ColorTranslator.FromHtml("#F7F2E8");
+            const string BackgroundColor = "#E8DCC8";
+
+            LoginTextBox.BackColor = ColorTranslator.FromHtml(BackgroundColor);
+            PasswordTextBox.BackColor = ColorTranslator.FromHtml(BackgroundColor);
+            comboBoxRights.BackColor = ColorTranslator.FromHtml(BackgroundColor);
 
             if (string.IsNullOrWhiteSpace(LoginTextBox.Text))
             {
@@ -64,7 +75,7 @@ namespace LibraryTeamWinFormApp
                 return false;
             }
 
-            if (comboBoxRights.SelectedItem == null)
+            if (comboBoxRights.SelectedItem is null)
             {
                 comboBoxRights.BackColor = Color.Red;
                 return false;
@@ -81,11 +92,15 @@ namespace LibraryTeamWinFormApp
 
         private void RegisterNewUser()
         {
-            string sql = "INSERT INTO users (name, password, rights) VALUES (@name, @password, @rights)";
+            string selectedRights = comboBoxRights.SelectedItem?.ToString();
+
+            string rightsInEnglish = AdditionalFormsFunctionalityExtension.SwitchRightsToPoop(selectedRights);
+
+            const string sql = @"INSERT INTO users (name, password, rights) VALUES (@name, @password, @rights)";
             using var cmd = new NpgsqlCommand(sql, _dbConnection);
             cmd.Parameters.AddWithValue("name", LoginTextBox.Text.Trim());
             cmd.Parameters.AddWithValue("password", PasswordTextBox.Text.Trim());
-            cmd.Parameters.AddWithValue("rights", comboBoxRights.SelectedItem?.ToString() ?? "читач");
+            cmd.Parameters.AddWithValue("rights", rightsInEnglish); 
             cmd.ExecuteNonQuery();
 
             MessageBox.Show("Користувача успішно зареєстровано!", "Успіх", MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -95,36 +110,35 @@ namespace LibraryTeamWinFormApp
 
         private void ApplyColorsAndAlignment()
         {
-            this.BackColor = ColorTranslator.FromHtml("#E8DCC8");
-            Color labelColor = ColorTranslator.FromHtml("#3A2A20");
+            this.BackColor = ColorTranslator.FromHtml(BackgroundColor);
 
             foreach (Label lbl in new Label[] { label1, label2, label3, label4 })
             {
-                lbl.ForeColor = labelColor;
-                lbl.BackColor = Color.Transparent;
                 lbl.TextAlign = ContentAlignment.MiddleCenter;
+                lbl.BackColor = Color.Transparent;
+                lbl.ForeColor = ColorTranslator.FromHtml(labelColor);
             }
 
             foreach (TextBox tb in new TextBox[] { LoginTextBox, PasswordTextBox })
             {
-                tb.BackColor = ColorTranslator.FromHtml("#F7F2E8");
-                tb.ForeColor = labelColor;
                 tb.TextAlign = HorizontalAlignment.Center;
-                tb.GotFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml("#FFF5D9");
-                tb.LostFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml("#F7F2E8");
+                tb.ForeColor = ColorTranslator.FromHtml(labelColor);
+                tb.BackColor = ColorTranslator.FromHtml(BoxBackgroundColor);
+                tb.GotFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml(BoxHoverBackgroundColor);
+                tb.LostFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml(BoxBackgroundColor);
             }
 
-            comboBoxRights.BackColor = ColorTranslator.FromHtml("#F7F2E8");
-            comboBoxRights.ForeColor = labelColor;
+            comboBoxRights.BackColor = ColorTranslator.FromHtml(BoxBackgroundColor);
+            comboBoxRights.ForeColor = ColorTranslator.FromHtml(labelColor);
             comboBoxRights.DropDownStyle = ComboBoxStyle.DropDownList;
 
-            RegisterButton.BackColor = ColorTranslator.FromHtml("#3F2727");
-            RegisterButton.ForeColor = Color.White;
+            RegisterButton.Cursor = Cursors.Hand;
             RegisterButton.FlatStyle = FlatStyle.Flat;
             RegisterButton.FlatAppearance.BorderSize = 0;
-            RegisterButton.Cursor = Cursors.Hand;
-            RegisterButton.MouseEnter += (s, e) => RegisterButton.BackColor = ColorTranslator.FromHtml("#5A3A3A");
-            RegisterButton.MouseLeave += (s, e) => RegisterButton.BackColor = ColorTranslator.FromHtml("#3F2727");
+            RegisterButton.ForeColor = Color.White;
+            RegisterButton.BackColor = ColorTranslator.FromHtml(ButtonBackgroundColor);
+            RegisterButton.MouseEnter += (s, e) => RegisterButton.BackColor = ColorTranslator.FromHtml(ButtonHoverBackgroundColor);
+            RegisterButton.MouseLeave += (s, e) => RegisterButton.BackColor = ColorTranslator.FromHtml(ButtonBackgroundColor);
         }
 
         private void CenterControls()

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Windows.Forms;
 using Npgsql;
@@ -7,30 +8,47 @@ namespace LibraryTeamWinFormApp
 {
     public partial class StartForm : Form
     {
-        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=1;Database=test";
-        RegisterForm? registrationForm = null;
-        LibraryForm? libraryForm = null;
-        NpgsqlConnection? DBConnection = null;
+        private LibraryForm? libraryForm = null;
+        public NpgsqlConnection? DBConnection = null;
+
+        const string BackgroundColor = "#E8DCC8";
+        const string labelColor = "#3A2A20";
+        const string textBoxColor = "#F7F2E8";
+        const string activeColor = "#FFF5D9";
+        const string buttonBase = "#3F2727";
+        const string buttonHover = "#5A3A3A";
 
         public StartForm()
         {
             InitializeComponent();
-            this.Load += Form1_Load;
+            this.Load += StartForm_Load;
         }
 
-        private void Form1_Load(object? sender, EventArgs e)
+        private void StartForm_Load(object? sender, EventArgs e)
         {
-            ConnectToDB();
+            DBConnection = AdditionalFormsFunctionalityExtension.CreateConnection();
+
+            if (!DBConnection.ValidateConnection())
+            {
+                label1.ForeColor = Color.Red;
+                label1.Text = "Помилка";
+            }
+            else
+            {
+                label1.ForeColor = Color.LightGreen;
+                label1.Text = "Успішне";
+            }
+
             ApplyColorsAndAlignment();
             CenterControls();
         }
 
         private void onRegisterButton_Click(object sender, EventArgs e)
         {
-            if (!ValidateConnectionToDataBase())
+            if (!DBConnection.ValidateConnection())
                 return;
 
-            if (!ValidateInputs()) 
+            if (!ValidateInputs())
                 return;
 
             TryLogin();
@@ -40,168 +58,125 @@ namespace LibraryTeamWinFormApp
         {
             libraryForm?.Close();
 
+            AuthorizationUserForm();
+
+            return true;
+        }
+
+        private void AuthorizationUserForm()
+        {
             string login = LoginTextBox.Text.Trim();
             string password = PasswordTextBox.Text.Trim();
 
+            const string sql = @"SELECT rights, id FROM users WHERE name = @name AND password = @password";
+
             try
             {
-                string sql = "SELECT rights, id FROM users WHERE name = @name AND password = @password";
+                using var connection = AdditionalFormsFunctionalityExtension.CreateConnection();
 
-                using (var cmd = new NpgsqlCommand(sql, DBConnection))
+                if (!connection.ValidateConnection())
+                    return;
+
+                using var cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("name", login);
+                cmd.Parameters.AddWithValue("password", password);
+
+                using var reader = cmd.ExecuteReader();
+
+                if (!reader.Read())
                 {
-                    cmd.Parameters.AddWithValue("name", login);
-                    cmd.Parameters.AddWithValue("password", password);
-
-                    using (var reader = cmd.ExecuteReader())
-                    {
-                        if (!reader.Read())
-                        {
-                            MessageBox.Show("Невірний логін або пароль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return false;
-                        }
-
-                        string rights = reader["rights"]?.ToString() ?? string.Empty;
-                        int id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : -1;
-
-                        // Переклад прав на українську
-                        string rightsUA = rights switch
-                            {
-                                "reader" => "читач",
-                                "librarian" => "бібліотекар",
-                                "admin" => "адмін",
-                                _ => rights
-                            };
-
-                        MessageBox.Show($"Ласкаво просимо, {login}! Ваша роль: {rightsUA}", "Успішний вхід", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                        reader.Close();
-
-                        UserInfo userInfo = new UserInfo
-                            {
-                                Id = id,
-                                Name = login,
-                                Password = password,
-                                Rights = rightsUA
-                            };
-
-                        libraryForm = new LibraryForm(DBConnection, userInfo);
-                        libraryForm.Show();
-                        registrationForm?.Close();
-                        this.Hide();
-                        return true;
-                    }
+                    MessageBox.Show("Невірний логін або пароль!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
+
+                string rights = reader["rights"]?.ToString() ?? string.Empty;
+                int id = reader["id"] != DBNull.Value ? Convert.ToInt32(reader["id"]) : -1;
+
+                string RightsToUA = AdditionalFormsFunctionalityExtension.SwitchRightsToUkrainian(rights);
+
+                MessageBox.Show($"Ласкаво просимо до бібліотеки, {login}! Ваша роль: {RightsToUA}", "Успішний вхід", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                 
+                var userInfo = new UserInfo(id, login, password, RightsToUA);
+
+                using var lconnection = AdditionalFormsFunctionalityExtension.CreateConnection();
+
+                if (!lconnection.ValidateConnection())
+                    return;
+
+                libraryForm = new LibraryForm(lconnection, userInfo);
+                libraryForm.Show();
+                this.Hide();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка авторизації:\n{ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
+                MessageBox.Show($"Помилка авторизації: {ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
-
         private bool ValidateInputs()
         {
-            if (!LoginTextBox.ValidateTextBox() || !PasswordTextBox.ValidateTextBox())
-                return false;
-
-            return true;
-        }
-
-        private bool ValidateConnectionToDataBase()
-        {
-            if (DBConnection == null)
-            {
-                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            return true;
-        }
-
-        private void ConnectToDB()
-        {
-            try
-            {
-                DBConnection = new NpgsqlConnection(connectionString);
-                DBConnection.Open();
-                DBStatusLabel.BackColor = Color.LightGreen;
-                DBStatusLabel.Text = "✅ Успішне";
-            }
-            catch
-            {
-                DBConnection = null;
-                DBStatusLabel.BackColor = Color.Red;
-                DBStatusLabel.Text = "❌ Помилка";
-            }
+            return LoginTextBox.ValidateTextBox() && PasswordTextBox.ValidateTextBox();
         }
 
         private void AddUserButton_Click(object sender, EventArgs e)
         {
-            registrationForm?.Close();
-
-            if (!ValidateConnectionToDataBase())
+            if (!DBConnection.ValidateConnection())
                 return;
 
-            registrationForm = new RegisterForm(DBConnection, onNewUserRegistered);
-            registrationForm.Show();
+            using var regForm = new RegisterForm(DBConnection, onNewUserRegistered);
+          
+            this.Hide(); 
+            regForm.ShowDialog(); 
+            this.Show();
         }
 
         private void onNewUserRegistered(string login, string password)
         {
-            this.LoginTextBox.Text = login;
-            this.PasswordTextBox.Text = password;
+            LoginTextBox.Text = login;
+            PasswordTextBox.Text = password;
         }
 
         private void ApplyColorsAndAlignment()
         {
-            this.BackColor = ColorTranslator.FromHtml("#E8DCC8");
-            Color labelColor = ColorTranslator.FromHtml("#3A2A20");
+            this.BackColor = ColorTranslator.FromHtml(BackgroundColor);
 
-            Label[] labels = { DBStatusLabel, label2, label3, label4 };
+            Label[] labels = { /* label1, */ label2, label3, label4 };
             foreach (var lbl in labels)
             {
-                lbl.ForeColor = labelColor;
-                lbl.BackColor = Color.Transparent;
                 lbl.TextAlign = ContentAlignment.MiddleCenter;
+                lbl.BackColor = Color.Transparent;
+                lbl.ForeColor = ColorTranslator.FromHtml(labelColor);
             }
 
-            Color textBoxColor = ColorTranslator.FromHtml("#F7F2E8");
             TextBox[] textBoxes = { LoginTextBox, PasswordTextBox };
             foreach (var tb in textBoxes)
             {
-                tb.BackColor = textBoxColor;
-                tb.ForeColor = labelColor;
                 tb.TextAlign = HorizontalAlignment.Center;
-                Color activeColor = ColorTranslator.FromHtml("#FFF5D9");
-                tb.GotFocus += (s, e) => tb.BackColor = activeColor;
-                tb.LostFocus += (s, e) => tb.BackColor = textBoxColor;
+                tb.BackColor = ColorTranslator.FromHtml(textBoxColor);
+                tb.ForeColor = ColorTranslator.FromHtml(labelColor);
+                tb.GotFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml(activeColor);
+                tb.LostFocus += (s, e) => tb.BackColor = ColorTranslator.FromHtml(textBoxColor);
             }
 
-            Color buttonBase = ColorTranslator.FromHtml("#3F2727");
-            Color buttonHover = ColorTranslator.FromHtml("#5A3A3A");
             Button[] buttons = { SignInButton, AddUserButton };
             foreach (var btn in buttons)
             {
-                btn.BackColor = buttonBase;
-                btn.ForeColor = Color.White;
+                btn.Cursor = Cursors.Hand;
                 btn.FlatStyle = FlatStyle.Flat;
                 btn.FlatAppearance.BorderSize = 0;
-                btn.Cursor = Cursors.Hand;
-                btn.MouseEnter += (s, e) => btn.BackColor = buttonHover;
-                btn.MouseLeave += (s, e) => btn.BackColor = buttonBase;
+                btn.ForeColor = Color.White;
+                btn.BackColor = ColorTranslator.FromHtml(buttonBase);
+                btn.MouseEnter += (s, e) => btn.BackColor = ColorTranslator.FromHtml(buttonHover);
+                btn.MouseLeave += (s, e) => btn.BackColor = ColorTranslator.FromHtml(buttonBase);
             }
         }
 
         private void CenterControls()
         {
-            Label[] labels = { DBStatusLabel, label2, label3, label4 };
-            foreach (var lbl in labels) lbl.Left = (this.ClientSize.Width - lbl.Width) / 2;
-
-            TextBox[] textBoxes = { LoginTextBox, PasswordTextBox };
-            foreach (var tb in textBoxes) tb.Left = (this.ClientSize.Width - tb.Width) / 2;
-
-            Button[] buttons = { SignInButton, AddUserButton };
-            foreach (var btn in buttons) btn.Left = (this.ClientSize.Width - btn.Width) / 2;
+            Control[] controls = { label1, label2, label3, label4, LoginTextBox, PasswordTextBox, SignInButton, AddUserButton };
+            foreach (Control parameters in controls)
+            {
+                parameters.Left = (this.ClientSize.Width - parameters.Width) / 2;
+            }
         }
     }
 
@@ -210,6 +185,14 @@ namespace LibraryTeamWinFormApp
         public int Id = -1;
         public string Name = string.Empty;
         public string Password = string.Empty;
-        public string Rights = string.Empty; // тепер зберігає українські значення: читач, бібліотекар, адмін
+        public string Rights = string.Empty;
+
+        public UserInfo(int id = 0, string name = "", string password = "", string rights = "")
+        {
+            this.Id = id;
+            this.Name = name;
+            this.Password = password;
+            this.Rights = rights;
+        }
     }
 }

@@ -3,7 +3,6 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Security.Policy;
 using System.Windows.Forms;
 
 namespace LibraryTeamWinFormApp
@@ -38,9 +37,9 @@ namespace LibraryTeamWinFormApp
 
         private void LoadBooks(string rights)
         {
-            bool isReader = rights == "читач";
-            bool isLibrarian = rights == "бібліотекар";
-            bool isAdmin = rights == "адміністратор";
+            bool isReader = rights == "читач" || rights == "reader";
+            bool isLibrarian = rights == "бібліотекар" || rights == "librarian";
+            bool isAdmin = rights == "адміністратор" || rights == "administrator";
 
             try
             {
@@ -82,7 +81,6 @@ namespace LibraryTeamWinFormApp
                     return;
                 }
 
-
                 using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
                 {
                     cachedDataTable = new DataTable();
@@ -114,7 +112,8 @@ namespace LibraryTeamWinFormApp
             if (adminPanelForm is not null)
                 adminPanelForm.Close();
 
-            if (userInfo.Rights != "адміністратор")
+            // Проверяем и английские и украинские права
+            if (userInfo.Rights != "адміністратор" && userInfo.Rights != "administrator")
             {
                 MessageBox.Show("Доступ заборонено. Тільки для адміністраторів.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -134,16 +133,23 @@ namespace LibraryTeamWinFormApp
                 return;
             }
 
-            var filteredRows = cachedDataTable.AsEnumerable().Where(row => row.Field<string>("title").ToLower().Contains(name));
+            var filteredRows = cachedDataTable.AsEnumerable().Where(row =>
+                row.Field<string>("title")?.ToLower().Contains(name) == true);
 
-            DataTable filteredTable = filteredRows.Any() ? filteredRows.CopyToDataTable() : cachedDataTable.Clone();
-
-            booksGridView.DataSource = filteredTable;
+            if (filteredRows.Any())
+            {
+                DataTable filteredTable = filteredRows.CopyToDataTable();
+                booksGridView.DataSource = filteredTable;
+            }
+            else
+            {
+                booksGridView.DataSource = cachedDataTable.Clone();
+            }
         }
 
         private void TakeBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights == "читач")
+            if (userInfo.Rights == "читач" || userInfo.Rights == "reader")
             {
                 MessageBox.Show("Тільки бібліотекарі та адміністратори можуть брати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -163,7 +169,7 @@ namespace LibraryTeamWinFormApp
             }
 
             int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["id"].Value);
-            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value.ToString() ?? "";
+            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value?.ToString() ?? "";
 
             takeBookForm?.Close();
             takeBookForm = new TakeBookForm(dbConnection, bookId, bookTitle, this);
@@ -180,7 +186,7 @@ namespace LibraryTeamWinFormApp
 
             var selectedRow = booksGridView.SelectedRows[0];
             int bookId = Convert.ToInt32(selectedRow.Cells["id"].Value);
-            string bookTitle = selectedRow.Cells["title"].Value.ToString() ?? "";
+            string bookTitle = selectedRow.Cells["title"].Value?.ToString() ?? "";
 
             var confirm = MessageBox.Show($"Ви впевнені, що хочете видалити книгу:\n\n'{bookTitle}' (ID: {bookId})?", "Підтвердження видалення",
                 MessageBoxButtons.YesNo,
@@ -232,14 +238,14 @@ namespace LibraryTeamWinFormApp
             }
 
             int bookId = Convert.ToInt32(booksGridView.SelectedRows[0].Cells["id"].Value);
-            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value.ToString() ?? "";
+            string bookTitle = booksGridView.SelectedRows[0].Cells["title"].Value?.ToString() ?? "";
             int fk_usertakedbook_id = -1;
             DateTime dateToPut = new DateTime();
             string login = "";
 
             try
             {
-                string queryBookID = "SELECT puttodate,fk_usertakedbook_id FROM books WHERE id = @bookId";
+                string queryBookID = "SELECT puttodate, fk_usertakedbook_id FROM books WHERE id = @bookId";
 
                 using (var cmd = new NpgsqlCommand(queryBookID, dbConnection))
                 {
@@ -253,21 +259,24 @@ namespace LibraryTeamWinFormApp
                             return;
                         }
 
-                        fk_usertakedbook_id = Convert.ToInt32(reader["fk_usertakedbook_id"]);
-                        dateToPut = Convert.ToDateTime(reader["puttodate"]);
+                        fk_usertakedbook_id = reader["fk_usertakedbook_id"] != DBNull.Value ? Convert.ToInt32(reader["fk_usertakedbook_id"]) : -1;
+                        dateToPut = reader["puttodate"] != DBNull.Value ? Convert.ToDateTime(reader["puttodate"]) : DateTime.Now;
                     }
                 }
 
-                string queryUser = "SELECT name FROM users WHERE id = @id";
-
-                using (var cmd = new NpgsqlCommand(queryUser, dbConnection))
+                if (fk_usertakedbook_id != -1)
                 {
-                    cmd.Parameters.AddWithValue("id", fk_usertakedbook_id);
+                    string queryUser = "SELECT name FROM users WHERE id = @id";
 
-                    using (var reader = cmd.ExecuteReader())
+                    using (var cmd = new NpgsqlCommand(queryUser, dbConnection))
                     {
-                        if (reader.Read())
-                            login = reader["name"].ToString() ?? "";
+                        cmd.Parameters.AddWithValue("id", fk_usertakedbook_id);
+
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                                login = reader["name"]?.ToString() ?? "";
+                        }
                     }
                 }
             }
@@ -280,11 +289,14 @@ namespace LibraryTeamWinFormApp
             bool isBookOverdue = DateTime.Now.Date > dateToPut.Date;
             string bookOverdue = isBookOverdue ? "З запізненням." : "Без запізнення.";
 
-            bool isLibrarianApproved = Microsoft.VisualBasic.Interaction.MsgBox(
+            DialogResult result = MessageBox.Show(
                 $"Дані правильні?\n Користувач: {login} (ID: {fk_usertakedbook_id})\n Повернення книги: \n ID {bookId} : {bookTitle} \n {bookOverdue}",
-                Microsoft.VisualBasic.MsgBoxStyle.YesNo,
-                "Підтвердження бібліотекаря"
-            ) == Microsoft.VisualBasic.MsgBoxResult.Yes;
+                "Підтвердження бібліотекаря",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question
+            );
+
+            bool isLibrarianApproved = result == DialogResult.Yes;
 
             if (!isLibrarianApproved)
             {
@@ -319,7 +331,7 @@ namespace LibraryTeamWinFormApp
 
         private void AddNewBookButton_Click(object sender, EventArgs e)
         {
-            if (userInfo.Rights == "читач")
+            if (userInfo.Rights == "читач" || userInfo.Rights == "reader")
             {
                 MessageBox.Show("Тільки бібліотекарі та адміністратори можуть додавати книги. Ви: " + userInfo.Rights, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
@@ -350,7 +362,9 @@ namespace LibraryTeamWinFormApp
             try
             {
                 string query = @"SELECT b.id, b.title, u.name AS borrower, b.takeddate AS ""Taken Date"", b.puttodate AS ""Return Date""
-                    FROM books b JOIN users u ON b.fk_usertakedbook_id = u.id  WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL ORDER BY b.puttodate ASC;";
+                    FROM books b JOIN users u ON b.fk_usertakedbook_id = u.id  
+                    WHERE b.puttodate < CURRENT_DATE AND b.fk_usertakedbook_id IS NOT NULL 
+                    ORDER BY b.puttodate ASC;";
 
                 using (var adapter = new NpgsqlDataAdapter(query, dbConnection))
                 {
@@ -364,7 +378,6 @@ namespace LibraryTeamWinFormApp
                 booksGridView.Columns["borrower"].HeaderText = "Користувач";
                 booksGridView.Columns["Taken Date"].HeaderText = "Дата взяття";
                 booksGridView.Columns["Return Date"].HeaderText = "Дата повернення";
-                booksGridView.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
                 booksGridView.ReadOnly = true;
             }
             catch (Exception ex)
@@ -430,9 +443,7 @@ namespace LibraryTeamWinFormApp
 
         public void Dispose()
         {
-            dbConnection?.Close();
-            dbConnection?.Dispose();
-            Application.Exit();
+
         }
     }
 }

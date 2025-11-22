@@ -144,12 +144,7 @@ namespace LibraryTeamWinFormApp
 
             userSettingsForm?.Close();
 
-            userSettingsForm = new UserSettings(DBConnection, new UserInfo
-            {
-                Id = userId,
-                Name = oldLogin,
-                Rights = oldRights
-            }, userInfo);
+            userSettingsForm = new UserSettings(DBConnection, new UserInfo(userId, oldLogin, oldRights), userInfo);
 
             userSettingsForm.FormClosed += (s, args) => LoadUsers();
             userSettingsForm.Show();

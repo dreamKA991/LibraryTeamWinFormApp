@@ -28,25 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            DBStatusLabel = new Label();
-            LoginTextBox = new TextBox();
+            label1 = new Label();
             label2 = new Label();
-            PasswordTextBox = new TextBox();
-            SignInButton = new Button();
             label3 = new Label();
             label4 = new Label();
+            LoginTextBox = new TextBox();
+            PasswordTextBox = new TextBox();
+            SignInButton = new Button();
             AddUserButton = new Button();
             SuspendLayout();
             // 
             // DBStatusLabel
             // 
-            DBStatusLabel.AutoSize = true;
-            DBStatusLabel.Font = new Font("Sitka Text", 10.1999989F);
-            DBStatusLabel.Location = new Point(122, 24);
-            DBStatusLabel.Name = "DBStatusLabel";
-            DBStatusLabel.Size = new Size(46, 20);
-            DBStatusLabel.TabIndex = 0;
-            DBStatusLabel.Text = "label1";
+            label1.AutoSize = true;
+            label1.Font = new Font("Sitka Text", 10.1999989F);
+            label1.Location = new Point(122, 24);
+            label1.Name = "label1";
+            label1.Size = new Size(46, 20);
+            label1.TabIndex = 0;
             // 
             // LoginTextBox
             // 
@@ -120,30 +119,31 @@
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(264, 251);
-            Controls.Add(AddUserButton);
-            Controls.Add(label4);
-            Controls.Add(label3);
-            Controls.Add(SignInButton);
-            Controls.Add(PasswordTextBox);
+
+            Controls.Add(label1);
             Controls.Add(label2);
+            Controls.Add(label3);
+            Controls.Add(label4);
             Controls.Add(LoginTextBox);
-            Controls.Add(DBStatusLabel);
+            Controls.Add(PasswordTextBox);
+            Controls.Add(AddUserButton);
+            Controls.Add(SignInButton);
             Name = "StartForm";
             Text = "Auntheficate";
-            Load += Form1_Load;
+            Load += StartForm_Load;
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private Label DBStatusLabel;
-        private TextBox LoginTextBox;
+        private Label label1;
         private Label label2;
-        private TextBox PasswordTextBox;
-        private Button SignInButton;
         private Label label3;
         private Label label4;
+        private TextBox LoginTextBox;
+        private TextBox PasswordTextBox;
+        private Button SignInButton;
         private Button AddUserButton;
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace LibraryTeamWinFormApp
 {
-    partial class AddNewBookInLibrary
+    public partial class AddNewBookInLibrary
     {
         /// <summary>
         /// Required designer variable.
@@ -108,7 +108,7 @@
         private TextBox TitleBookTextBox;
         private Label label1;
         private Label label2;
-        private TextBox ISBNBookTextBox;
+        public TextBox ISBNBookTextBox;
         private Button AddNewBookButton;
     }
 }

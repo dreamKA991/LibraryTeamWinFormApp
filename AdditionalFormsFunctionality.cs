@@ -1,4 +1,6 @@
 ﻿using Npgsql;
+using System.Data;
+using System.Data.Common;
 
 namespace LibraryTeamWinFormApp
 {
@@ -17,6 +19,69 @@ namespace LibraryTeamWinFormApp
             return true;
         }
 
+        public static bool IsHaveLiters(this TextBox textBox)
+        {
+            string text = textBox.Text;
+
+            foreach (char c in text)
+            {
+                if (char.IsLetter(c))
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static NpgsqlConnection CreateConnection()
+        {
+            const string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=1;Database=test;Encoding=UTF8";
+            return new NpgsqlConnection(connectionString);
+        }
+
+        public static bool ValidateConnection(this NpgsqlConnection connection)
+        {
+            if (connection is null)
+            {
+                MessageBox.Show("Немає підключення до бази даних!", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            try
+            {
+                if (connection.State != ConnectionState.Open)
+                    connection.Open();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Помилка підключення до бази даних:\n{ex.Message}", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            return true;
+        }
+
+        public static string SwitchRightsToUkrainian(this string rights)
+        {
+            switch (rights.ToLower())
+            {
+                case "reader": return "читач";
+                case "librarian": return "бібліотекар";
+                case "administrator": return "адміністратор";
+                default: return "невідомі права";
+            }
+        }
+
+        public static string SwitchRightsToPoop(this string rights)
+        {
+            switch (rights.ToLower())
+            {
+                case "читач": return "reader";
+                case "бібліотекар": return "librarian";
+                case "адміністратор": return "administrator";
+                default: return "unknown role";
+            }
+        }
+
         public static string GetRightsStringFromComboBox(this ComboBox comboBox)
         {
             switch (comboBox.SelectedIndex)
@@ -25,47 +90,6 @@ namespace LibraryTeamWinFormApp
                 case 1: return "бібліотекар";
                 case 2: return "адміністратор";
                 default: return string.Empty;
-            }
-        }
-
-        public static bool IsHaveLiters(this TextBox textBox)
-        {
-            string text = textBox.Text;
-
-            foreach (char c in text)
-            {
-                if (char.IsLetter(c)) 
-                    return true;
-            }
-
-            return false;
-        }
-
-        public static bool IsLoginExistsInDataBase(this NpgsqlConnection dbConnection,string login)
-        {
-            try
-            {
-                string sql = "SELECT COUNT(*) FROM users WHERE name = @name";
-
-                using (var cmd = new NpgsqlCommand(sql, dbConnection))
-                {
-                    cmd.Parameters.AddWithValue("name", login);
-
-                    long count = (long)cmd.ExecuteScalar();
-
-                    if (count <= 0)
-                    {
-                        MessageBox.Show($"That login already exists", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return false;
-                    }
-
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error checking login: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return true;
             }
         }
     }
